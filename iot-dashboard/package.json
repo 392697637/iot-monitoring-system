@@ -11,6 +11,7 @@
     "axios": "^1.13.2",
     "core-js": "^3.8.3",
     "echarts": "^6.0.0",
+    "element-plus": "^2.13.1",
     "vue": "^3.2.13",
     "vue-echarts": "^8.0.1",
     "vue-router": "^4.6.4"
@@ -24,6 +25,7 @@
     "eslint": "^7.32.0",
     "eslint-plugin-vue": "^8.0.3"
   },
+  
   "eslintConfig": {
     "root": true,
     "env": {
@@ -36,7 +38,11 @@
     "parserOptions": {
       "parser": "@babel/eslint-parser"
     },
-    "rules": {}
+    "rules": {
+      "no-debugger": "off",       
+      "no-unused-vars": "warn",     
+      "vue/no-unused-components": "warn"
+    }
   },
   "browserslist": [
     "> 1%",

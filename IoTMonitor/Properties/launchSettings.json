@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "IoTMonitor": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:51215;http://localhost:51216"
+    }
+  }
+}

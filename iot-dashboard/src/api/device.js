@@ -1,17 +1,27 @@
-import axios from 'axios';
+import axios from 'axios'
 
-const API_BASE = 'https://localhost:5001/api'; // .NET 8 后端地址
+const BASE_URL = 'https://localhost:51215/api'
 
-export const getDevices = () => axios.get(`${API_BASE}/device`);
+export function getDevices() {
+  return axios.get(`${BASE_URL}/Devices`)
+}
 
-export const getDeviceFactors = (deviceId) => axios.get(`${API_BASE}/device/${deviceId}/factors`);
+export function addDevice(device) {
+  return axios.post(`${BASE_URL}/Devices/add`, device)
+}
 
-export const getRealtimeData = (deviceId) => axios.get(`${API_BASE}/device/${deviceId}/realtime`);
+export function getLatestData(deviceId) {
+  return axios.get(`${BASE_URL}/DeviceData/latest`, { params: { deviceId } })
+}
 
-export const getHistoryData = (deviceId, factor, start, end) => {
-  return axios.get(`${API_BASE}/device/${deviceId}/history`, {
-    params: { factor, start, end }
-  });
-};
+export function getDeviceHistory(deviceId, start, end) {
+  return axios.get(`${BASE_URL}/DeviceData/history`, { params: { deviceId, start, end } })
+}
 
-export const getDeviceAlarms = (deviceId) => axios.get(`${API_BASE}/device/${deviceId}/alarm`);
+export function getThresholds(deviceId) {
+  return axios.get(`${BASE_URL}/Thresholds/${deviceId}`)
+}
+
+export function setThreshold(threshold) {
+  return axios.post(`${BASE_URL}/Thresholds/set`, threshold)
+}

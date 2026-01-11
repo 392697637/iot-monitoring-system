@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<!-- 删除 OutputType 或改为 Exe -->
+		<OutputType>Exe</OutputType>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- ASP.NET Core OpenAPI 支持 -->
+		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.0" />
+
+		<!-- EF Core SQL Server -->
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.0" />
+
+		<!-- Swagger UI -->
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="7.2.0" />
+
+		<!-- 可选：JWT 认证 -->
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
+	</ItemGroup>
+
+</Project>
