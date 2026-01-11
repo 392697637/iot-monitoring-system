@@ -54,13 +54,13 @@ const list = ref([])
 
 onMounted(async () => {
   const res = await getDevices()
-  devices.value = res.data
+  devices.value = res.data 
 })
 
 const search = async () => {
   if (!selectedDeviceId.value || timeRange.value.length !== 2) return
   const [start, end] = timeRange.value
   const res = await getHistoryData(selectedDeviceId.value, start, end)
-  list.value = res.data
+  list.value = res.data 
 }
 </script>

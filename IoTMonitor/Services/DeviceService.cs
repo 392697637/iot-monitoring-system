@@ -72,12 +72,26 @@ namespace IoTMonitor.Services
 
         public async Task<List<DeviceData>> GetDeviceHistoryAsync(int deviceId, DateTime start, DateTime end)
         {
+
+            var list = GetDeviceHistoryList(deviceId, start, end);
+            return await list;
+            //return await _context.DeviceDatas
+            //    .Where(d => d.DeviceId == deviceId && d.CreatedAt >= start && d.CreatedAt <= end)
+            //    .OrderByDescending(d => d.CreatedAt)
+            //    .ToListAsync();
+        }
+        public async Task<List<DeviceData>> GetDeviceHistoryList(int deviceId, DateTime start, DateTime end)
+        {
             return await _context.DeviceDatas
                 .Where(d => d.DeviceId == deviceId && d.CreatedAt >= start && d.CreatedAt <= end)
-                .OrderByDescending(d => d.CreatedAt)
-                .ToListAsync();
+                .OrderByDescending(d => d.CreatedAt).ToListAsync();
+            ////start = DateTime.Parse("2026-01-01 00:00");
+            ////end = DateTime.Parse("2026-02-01 00:00");
+            //return await _context.DeviceDatas
+            //   .Where(d => d.DeviceId == deviceId && d.CreatedAt >= start && d.CreatedAt <= end).ToListAsync();
+            ////return await _context.DeviceDatas.Where(d => d.DeviceId == deviceId).ToListAsync();
+            ////return await _context.DeviceDatas.ToListAsync();
         }
-
         public async Task<DeviceData?> GetLatestDeviceDataAsync(int deviceId)
         {
             return await _context.DeviceDatas

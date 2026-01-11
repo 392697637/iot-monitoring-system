@@ -82,7 +82,7 @@ let timer = null
 onMounted(async () => {
   const res = await getDevices()
   // devices.value = res.data
-    devices.value = res.data.$values
+    devices.value = res.data
    
   if (devices.value.length > 0) {
     deviceId.value = devices.value[0].deviceId

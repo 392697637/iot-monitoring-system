@@ -38,8 +38,26 @@ namespace IoTMonitor.Controllers
         [HttpGet("history")]
         public async Task<IActionResult> GetHistory(int deviceId, DateTime start, DateTime end)
         {
-            var result = await _service.GetDeviceHistoryAsync(deviceId, start, end);
-            return Ok(result);
+            //var result = await _service.GetDeviceHistoryAsync(deviceId, start, end);
+            //return Ok(result);
+            try
+            {
+                //// 尝试解析前端传来的字符串
+                //if (!DateTime.TryParse(start, out DateTime startTime) ||
+                //    !DateTime.TryParse(end, out DateTime endTime))
+                //{
+                //    return BadRequest("日期格式错误");
+                //}
+
+                var result = await _service.GetDeviceHistoryAsync(deviceId, start, end);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                // 记录错误，方便调试
+                Console.WriteLine(ex);
+                return StatusCode(500, ex.Message);
+            }
         }
     }
 

@@ -1,7 +1,7 @@
 <template>
-  <el-container style="height: 100vh;">
+  <el-container style="height:100vh">
     <!-- 顶部 -->
-    <el-header style="background: #1f2d3d; color: white; font-size: 20px; font-weight: bold;">
+    <el-header style="background: #1f2d3d; color:white; font-size:20px; font-weight:bold;">
       物联网管理系统
     </el-header>
 
@@ -11,8 +11,8 @@
       <el-aside width="200px" style="background: #2e3c4e; color:white;">
         <el-menu
           v-model="activeMenu"
-          @select="handleMenuSelect"
           default-active="realtime"
+          class="el-menu-vertical-demo"
           background-color="#2e3c4e"
           text-color="#bfcbd9"
           active-text-color="#409EFF"
@@ -28,7 +28,6 @@
       <el-main style="padding:20px; background:#f0f2f5;">
         <component 
           :is="currentComponent" 
-          :key="activeMenu"        
           :selectedDeviceId="selectedDeviceId" 
           :devices="devices"
         />
@@ -40,7 +39,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 
-// 引入子组件
+// 页面组件
 import RealtimeMonitor from '@/components/RealtimeMonitor.vue'
 import HistoryData from '@/components/HistoryData.vue'
 import DevicesManagement from '@/components/DevicesManagement.vue'
@@ -49,15 +48,16 @@ import ThresholdSetting from '@/components/ThresholdSetting.vue'
 // API
 import { getDevices } from '@/api/device'
 
-// 左侧菜单选中
+// 菜单选中
 const activeMenu = ref('realtime')
 
-// 设备列表与选中设备
+// 设备列表
 const devices = ref([])
 const selectedDeviceId = ref(null)
 
-// 根据 activeMenu 计算要展示的组件
+// 根据菜单切换组件
 const currentComponent = computed(() => {
+  debugger
   switch(activeMenu.value) {
     case 'realtime': return RealtimeMonitor
     case 'history': return HistoryData
@@ -67,25 +67,13 @@ const currentComponent = computed(() => {
   }
 })
 
-// 菜单切换
-const handleMenuSelect = (index) => {
-  activeMenu.value = index
-}
-
 // 获取设备列表
 const fetchDevices = async () => {
-  try {
-    const res = await getDevices()
-    devices.value = res.data
-    if (devices.value.length > 0 && !selectedDeviceId.value) {
-      selectedDeviceId.value = devices.value[0].deviceId
-    }
-  } catch (error) {
-    console.error('获取设备列表失败', error)
-  }
+  const res = await getDevices()
+  devices.value = res.data
+  if (devices.value.length > 0) selectedDeviceId.value = devices.value[0].deviceId
 }
 
-// 页面初始化
 onMounted(() => {
   fetchDevices()
 })

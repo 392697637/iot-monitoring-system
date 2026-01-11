@@ -14,10 +14,16 @@ export function getLatestData(deviceId) {
   return axios.get(`${BASE_URL}/DeviceData/latest`, { params: { deviceId } })
 }
 
-export function getDeviceHistory(deviceId, start, end) {
+export function getHistoryData(deviceId, start, end) {
   return axios.get(`${BASE_URL}/DeviceData/history`, { params: { deviceId, start, end } })
 }
 
+export function getDeviceHistory(deviceId, start, end) {
+  return axios.get(`${BASE_URL}/DeviceData/history`, { params: { deviceId, start, end } })
+}
+export function getThresholdsByDevice(deviceId) {
+  return axios.get(`${BASE_URL}/Thresholds/${deviceId}`)
+}
 export function getThresholds(deviceId) {
   return axios.get(`${BASE_URL}/Thresholds/${deviceId}`)
 }

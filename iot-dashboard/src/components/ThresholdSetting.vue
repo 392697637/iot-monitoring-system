@@ -68,6 +68,7 @@ const threshold = ref(null)
 const loadDevices = async () => {
   const res = await getDevices()
   devices.value = res.data
+
   if (devices.value.length > 0) {
     deviceId.value = devices.value[0].deviceId
     loadThreshold()

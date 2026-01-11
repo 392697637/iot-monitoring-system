@@ -33,7 +33,7 @@ const newDeviceLocation = ref('')
 
 const fetchDevices = async () => {
   const res = await getDevices()
-  devices.value = res.data
+ devices.value = res.data.$values
 }
 
 // ⚡ 必须使用，否则 ESLint 报错
