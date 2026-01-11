@@ -1,0 +1,48 @@
+{
+  "name": "iot-monitoring-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build",
+    "lint": "vue-cli-service lint",
+    "preview": "vue-cli-service preview"
+  },
+  "dependencies": {
+    "vue": "^2.7.0",
+    "vue-router": "^3.6.5",
+    "vuex": "^3.6.2",
+    "axios": "^1.6.0",
+    "element-ui": "^2.15.14",
+    "@microsoft/signalr": "^8.0.0",
+    "echarts": "^5.4.2",
+    "vue-echarts": "^6.5.3",
+    "moment": "^2.29.4",
+    "lodash": "^4.17.21",
+    "vuedraggable": "^2.24.3",
+    "vue-i18n": "^8.28.2",
+    "vue-meta": "^2.4.0",
+    "js-cookie": "^3.0.5",
+    "file-saver": "^2.0.5",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@vue/cli-service": "~5.0.8",
+    "@vue/cli-plugin-babel": "~5.0.8",
+    "@vue/cli-plugin-eslint": "~5.0.8",
+    "@vue/cli-plugin-router": "~5.0.8",
+    "@vue/cli-plugin-vuex": "~5.0.8",
+    "vue-template-compiler": "^2.7.0",
+    "eslint": "^8.56.0",
+    "eslint-plugin-vue": "^9.19.0",
+    "sass": "^1.69.5",
+    "sass-loader": "^13.3.2",
+    "webpack-bundle-analyzer": "^4.10.1",
+    "compression-webpack-plugin": "^10.0.0"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ]
+}
