@@ -10,7 +10,7 @@
       />
     </el-select>
 
-    <el-row :gutter="20" style="margin-top: 20px;">
+    <el-row :gutter="20" style="margin-top: 20px">
       <el-col :span="6" v-for="metric in metrics" :key="metric.label">
         <el-card :class="{ alarm: metric.alarm }">
           <div>{{ metric.label }}</div>
@@ -22,52 +22,72 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue' // ✅ 添加 onUnmounted
-import { getDevices, getLatestData } from '../api/device'
+import { ref, onMounted, onUnmounted } from "vue"; // ✅ 添加 onUnmounted
+import {
+  getDevices,
+  getLatestData,
+  getDeviceTable,
+  getDataByTableName,
+} from "../api/device";
 
-const devices = ref([])
-const deviceId = ref(null)
+const devices = ref([]);
+const deviceId = ref(null);
+const tablename = ref(null);
 
 const metrics = ref([
-  { label: '温度 (℃)', value: '-', alarm: false },
-  { label: '湿度 (%)', value: '-', alarm: false },
-  { label: '电压 (V)', value: '-', alarm: false },
-  { label: '电流 (A)', value: '-', alarm: false }
-])
+  { label: "温度 (℃)", value: "-", alarm: false },
+  { label: "湿度 (%)", value: "-", alarm: false },
+  { label: "电压 (V)", value: "-", alarm: false },
+  { label: "电流 (A)", value: "-", alarm: false },
+]);
 
-let timer = null
-const alarmAudio = new Audio('/data/alarm.mp3')
-
-const loadData = async () => {
-  if (!deviceId.value) return
-  const res = await getLatestData(deviceId.value)
-  const d = res.data
-  if (!d) return
-
-  metrics.value[0].value = d.temperature
-  metrics.value[1].value = d.humidity
-  metrics.value[2].value = d.voltage
-  metrics.value[3].value = d.current
-
-  metrics.value.forEach(m => m.alarm = d.status === 1)
-
-  if (d.status === 1) alarmAudio.play()
-}
-
+let timer = null;
+const alarmAudio = new Audio("/data/alarm.mp3");
 onMounted(async () => {
-  const res = await getDevices()
-  devices.value = res.data
-  if (devices.value.length > 0) {
-    deviceId.value = devices.value[0].deviceId
-    loadData()
-    timer = setInterval(loadData, 5000)
-  }
-})
+  const res = await getDevices();
 
+  devices.value = res.data;
+  if (devices.value.length > 0) {
+    deviceId.value = devices.value[0].deviceId;
+    tablename.value = devices.value[0].deviceTable;
+    loadDeviceTable();
+    loadData();
+    timer = setInterval(loadData, 5000);
+  }
+});
+//设备因子显示
+const loadDeviceTable = async () => {
+  if (!tablename.value) return;
+  const res = await getDeviceTable(tablename.value);
+  const d = res.data;
+  if (!d) return;
+  d.forEach((m) => {
+    metrics.value.push({ label: m.displayName, value: "-", alarm: false });
+  });
+};
+//数据添加
+const loadData = async () => {
+  if (!tablename.value) return;
+  var topNumber = 1;
+  var orderby = "DID";
+  const res = await getDataByTableName(tablename.value, topNumber, orderby);
+  const d = res.data;
+  debugger;
+  if (!d) return;
+ var seledata= d.data[0];
+    debugger;
+    metrics.value.forEach((metr) => {
+      metr.value=seledata[metr.label]
+    })
+    
+  var status = 0;
+  //告警
+  if (status === 1) alarmAudio.play();
+};
 // ✅ 修复 no-undef
 onUnmounted(() => {
-  if (timer) clearInterval(timer)
-})
+  if (timer) clearInterval(timer);
+});
 </script>
 
 <style scoped>

@@ -2,6 +2,7 @@ import axios from 'axios'
 
 const BASE_URL = 'https://localhost:51215/api'
 
+//获取设备
 export function getDevices() {
   return axios.get(`${BASE_URL}/Devices`)
 }
@@ -30,4 +31,14 @@ export function getThresholds(deviceId) {
 
 export function setThreshold(threshold) {
   return axios.post(`${BASE_URL}/Thresholds/set`, threshold)
+}
+//获取表字段
+export function getDeviceTable(tableName) {
+  return axios.get(`${BASE_URL}/DeviceTable/fieldByTableName`, { params: { tableName } })
+}
+//获取表数据
+export function getDataByTableName(tableName,) {
+  var topNumber=1;
+  var orderby="DID"
+  return axios.get(`${BASE_URL}/DeviceTable/dataByTableName`, { params: { tableName,topNumber,orderby } })
 }

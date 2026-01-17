@@ -10,6 +10,7 @@
 
 	<ItemGroup>
 		<!-- ASP.NET Core OpenAPI 支持 -->
+		<PackageReference Include="Dapper" Version="2.1.66" />
 		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.0" />
 
 		<!-- EF Core SQL Server -->

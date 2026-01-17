@@ -20,6 +20,7 @@ builder.Services.AddScoped<DeviceService>();
 
 builder.Services.AddScoped<DeviceDataService>();
 builder.Services.AddScoped<ThresholdService>();
+builder.Services.AddScoped<DeviceTableService>();
 
 // -------------------
 // 控制器 & Swagger

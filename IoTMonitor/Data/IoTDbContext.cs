@@ -12,6 +12,8 @@ namespace IoTMonitor.Data
         public DbSet<DeviceThreshold> DeviceThresholds { get; set; }
         public DbSet<DeviceAlarm> DeviceAlarms { get; set; }
 
+        public DbSet<DeviceTable> DeviceTables { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // 主键
@@ -20,11 +22,14 @@ namespace IoTMonitor.Data
             modelBuilder.Entity<DeviceThreshold>().HasKey(dt => dt.ThresholdId);
             modelBuilder.Entity<DeviceAlarm>().HasKey(da => da.AlarmId);
 
+            modelBuilder.Entity<DeviceTable>().HasKey(da => da.Id);
+
             // 设备与数据
             modelBuilder.Entity<Device>()
                 .HasMany(d => d.DeviceDatas)
                 .WithOne(dd => dd.Device)
                 .HasForeignKey(dd => dd.DeviceId);
+
 
             // 设备与阈值
             modelBuilder.Entity<Device>()
@@ -37,6 +42,14 @@ namespace IoTMonitor.Data
                 .HasMany(d => d.DeviceAlarms)
                 .WithOne(da => da.Device)
                 .HasForeignKey(da => da.DeviceId);
+
+
+            //// 设备与阈值
+            //modelBuilder.Entity<Device>()
+            //    .HasMany(d => d.DeviceTables)
+            //    .WithOne(dt => dt.Device)
+            //    .HasForeignKey(dt => dt.DeviceId);
+
         }
     }
 }

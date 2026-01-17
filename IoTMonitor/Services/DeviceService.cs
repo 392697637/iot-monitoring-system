@@ -1,18 +1,24 @@
-﻿using IoTMonitor.Data;
+﻿using Dapper;
+using IoTMonitor.Data;
 using IoTMonitor.Models;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.Extensions.Configuration;
+using System.Data;
 
 namespace IoTMonitor.Services
 {
-    public class DeviceDataService
+
+    public class DeviceDataService  
     {
+        
         private readonly IoTDbContext _context;
 
         public DeviceDataService(IoTDbContext context)
         {
             _context = context;
         }
-
         // 添加设备数据，并检查阈值
         public async Task<DeviceData> AddDeviceDataAsync(DeviceData data)
         {
@@ -99,7 +105,9 @@ namespace IoTMonitor.Services
                 .OrderByDescending(d => d.CreatedAt)
                 .FirstOrDefaultAsync();
         }
+     
     }
+    
 
     public class DeviceService
     {
@@ -117,8 +125,17 @@ namespace IoTMonitor.Services
                 .Include(d => d.DeviceThresholds)
                 .Include(d => d.DeviceAlarms)
                 .ToListAsync();
+
         }
 
+        public async Task<List<Device>> GetAllDevicesAsyncs()
+        {
+            return await _context.Devices
+                .Include(d => d.DeviceDatas)
+                .Include(d => d.DeviceThresholds)
+                .Include(d => d.DeviceAlarms)
+                .ToListAsync();
+        }
         public async Task<Device> AddDeviceAsync(Device device)
         {
             device.CreatedAt = DateTime.Now;
@@ -167,6 +184,141 @@ namespace IoTMonitor.Services
 
             await _context.SaveChangesAsync();
             return threshold;
+        }
+    }
+
+
+    public class DeviceTableService
+    {
+        private readonly IConfiguration _configuration;
+        private readonly IoTDbContext _context;
+
+        public DeviceTableService(IoTDbContext context)
+        {
+            _context = context;
+            
+            _configuration= _context.GetService<IConfiguration>();
+        }
+     
+
+        /// <summary>
+        /// 获取数据库中所有表名
+        /// </summary>
+        public async Task<IEnumerable<string>> GetAllTableNamesAsync()
+        {
+            using var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
+            await connection.OpenAsync();
+
+            var sql = @"SELECT TABLE_NAME 
+                        FROM INFORMATION_SCHEMA.TABLES 
+                        WHERE TABLE_TYPE = 'BASE TABLE' 
+                        AND TABLE_CATALOG = @DatabaseName";
+
+            var databaseName = _configuration.GetConnectionString("DefaultConnection")
+                .Split(';')
+                .FirstOrDefault(x => x.StartsWith("Initial Catalog=", StringComparison.OrdinalIgnoreCase))
+                ?.Split('=')[1];
+
+            return await connection.QueryAsync<string>(sql, new { DatabaseName = databaseName });
+        }
+
+        /// <summary>
+        /// 验证表名是否合法（防止SQL注入）
+        /// </summary>
+        private bool IsValidTableName(string tableName)
+        {
+            if (string.IsNullOrWhiteSpace(tableName))
+                return false;
+
+            // 只允许字母、数字、下划线
+            return System.Text.RegularExpressions.Regex.IsMatch(tableName, @"^[a-zA-Z0-9_]+$");
+        }
+
+        /// <summary>
+        /// 检查表是否存在
+        /// </summary>
+        private async Task<bool> TableExistsAsync(string tableName)
+        {
+            using var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
+            await connection.OpenAsync();
+
+            var sql = @"SELECT COUNT(*) 
+                        FROM INFORMATION_SCHEMA.TABLES 
+                        WHERE TABLE_NAME = @TableName 
+                        AND TABLE_TYPE = 'BASE TABLE'";
+
+            var count = await connection.ExecuteScalarAsync<int>(sql, new { TableName = tableName });
+            return count > 0;
+        }
+
+        /// <summary>
+        /// 分页查询表数据
+        /// </summary>
+        public async Task<(IEnumerable<dynamic> Data, int TotalCount)> GetDataByTableNamePagedAsync(
+            string tableName, int pageNumber = 1, int pageSize = 20)
+        {
+            if (!IsValidTableName(tableName))
+                throw new ArgumentException("无效的表名");
+
+            if (!await TableExistsAsync(tableName))
+                throw new ArgumentException($"表 '{tableName}' 不存在");
+
+            using var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
+            await connection.OpenAsync();
+
+            // 获取总记录数
+            var countSql = $"SELECT COUNT(*) FROM [{tableName}]";
+            var totalCount = await connection.ExecuteScalarAsync<int>(countSql);
+
+            // 分页查询数据
+            var dataSql = $@"
+                SELECT * FROM [{tableName}]
+                ORDER BY (SELECT NULL)
+                OFFSET @Offset ROWS
+                FETCH NEXT @PageSize ROWS ONLY";
+
+            var offset = (pageNumber - 1) * pageSize;
+            var data = await connection.QueryAsync(dataSql, new
+            {
+                Offset = offset,
+                PageSize = pageSize
+            });
+
+            return (data, totalCount);
+        }
+        /// <summary>
+        /// 获取表名
+        /// </summary>
+        /// <param name="tablename"></param>
+        /// <returns></returns>
+        public async Task<List<DeviceTable>> GetablenameByDataAsync(string tablename)
+        { 
+            
+            return await _context.DeviceTables.Where(d => d.TableName == tablename).ToListAsync(); 
+        }
+        /// <summary>
+        /// 根据表名动态查询数据
+        /// </summary>
+        public async Task<IEnumerable<dynamic>> GetDataByTableNameAsync(string tableName,int topNumber, string orderby)
+        {
+            // 验证表名合法性，防止SQL注入
+            if (!IsValidTableName(tableName))
+            {
+                throw new ArgumentException("无效的表名");
+            }
+
+            // 检查表是否存在
+            if (!await TableExistsAsync(tableName))
+            {
+                throw new ArgumentException($"表 '{tableName}' 不存在");
+            }
+
+            using var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
+            await connection.OpenAsync();
+
+            // 动态查询表数据
+            var sql = $"SELECT TOP({topNumber})* FROM [{tableName}]   ORDER BY {orderby} DESC ";
+            return await connection.QueryAsync(sql);
         }
     }
 }
