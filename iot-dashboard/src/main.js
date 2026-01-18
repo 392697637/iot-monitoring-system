@@ -15,15 +15,12 @@ import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 // 引入中文
 import zhCn from "element-plus/es/locale/lang/zh-cn";
-console.log("[App] Initializing...");
 
 // 1. 加载配置
 const appConfig = await config.load();
-console.log("[App] Config loaded:", appConfig);
 
 // 2. 初始化 API 服务
 await apiService.init(appConfig);
-console.log("[App] API service initialized");
 const app = createApp(App);
 app.use(ElementPlus, {
   locale: zhCn,

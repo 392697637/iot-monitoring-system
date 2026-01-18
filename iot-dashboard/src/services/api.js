@@ -92,7 +92,7 @@ class ApiService {
    * 处理响应
    */
   handleResponse(response) {
-    const { data, status } = response
+    const { data } = response
     
     // 根据后端返回的数据结构进行调整
     // 假设后端返回 { code, message, data }

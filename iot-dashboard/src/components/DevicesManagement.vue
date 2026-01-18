@@ -504,7 +504,6 @@ const selectDevice = async (device) => {
         maxValue: factor.maxValue || '',
       }));
     }
-    
     currentFactorPage.value = 1;
   } catch (error) {
     console.error("加载因子数据失败:", error);
@@ -692,6 +691,7 @@ const submitFactorForm = async () => {
     factorSubmitting.value = true;
     
     const factorData = {
+      id:factorForm.id,
       tableName: activeDevice.value.deviceTable,
       fieldName: factorForm.fieldName,
       fieldType: factorForm.fieldType,
@@ -714,14 +714,16 @@ const submitFactorForm = async () => {
     if (showDecimalPlaces.value && factorForm.DecimalPlaces !== undefined) {
       factorData.DecimalPlaces = factorForm.DecimalPlaces;
     }
-debugger
     if (isEditFactorMode.value) {
       // 编辑因子
       await updateFactor(factorData);
       ElMessage.success("因子更新成功");
     } else {
       // 添加因子
-      await addFactor(factorData);
+        const addData = {
+        ...factorData
+      };
+      await addFactor(addData);
       ElMessage.success("因子添加成功");
     }
     
@@ -758,7 +760,7 @@ const deleteFactor = async (factor) => {
     );
 
     await deleteFactorApi({
-      fieldName: factor.fieldName,
+      id: factor.id,
       tableName: activeDevice.value.deviceTable,
     });
 

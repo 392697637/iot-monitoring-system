@@ -25,91 +25,88 @@ namespace IoTMonitor.Services
         {
             _context = context;
         }
-
+        /// <summary>
+        /// 获取所有设备
+        /// </summary>
+        /// <returns></returns>
         public async Task<List<Device>> GetAllDevicesAsync()
         {
-            return await _context.Devices.ToListAsync();
+            try
+            {
+                return await _context.Devices.ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new ApplicationException("获取设备列表失败， ", ex);
+            }
 
         }
-
+        /// <summary>
+        /// 添加设备
+        /// </summary>
+        /// <param name="device"></param>
+        /// <returns></returns>
         public async Task<Device> AddDeviceAsync(Device device)
         {
-            device.CreatedAt = DateTime.Now;
-            _context.Devices.Add(device);
-            await _context.SaveChangesAsync();
-            return device;
+            try
+            {
+                device.CreatedAt = DateTime.Now;
+                _context.Devices.Add(device);
+                await _context.SaveChangesAsync();
+                return device;
+            }
+            catch (Exception ex)
+            {
+                throw new ApplicationException("添加设备失败， ", ex);
+
+            }
         }
+        /// <summary>
+        /// 更新设备
+        /// </summary>
+        /// <param name="device"></param>
+        /// <returns></returns>
+        public async Task<Device> UpdateDeviceAsync(Device device)
+        {
+            try
+            {
+                device.CreatedAt = DateTime.Now;
+                _context.Devices.Update(device);
+                await _context.SaveChangesAsync();
+                return device;
+            }
+            catch (Exception ex)
+            {
+                throw new ApplicationException("更新设备失败， ", ex);
+            }
+
+        }
+        /// <summary>
+        /// 删除设备
+        /// </summary>
+        /// <param name="deviceId"></param>
+        /// <returns></returns>
+        /// <exception cref="ApplicationException"></exception>
         public async Task<bool> DeleteDeviceAsync(int deviceId)
         {
             try
             {
                 // 使用 Include 加载所有关联数据
-                var device = await _context.Devices
-                    .FirstOrDefaultAsync(d => d.DeviceId == deviceId);
-
+                var device = await _context.Devices.FirstOrDefaultAsync(d => d.DeviceId == deviceId);
                 if (device == null)
                 {
                     return false;
                 }
-
-                // 方法2：设置关联数据为软删除状态（如果允许）
-                // device.Alerts?.ForEach(a => a.IsDeleted = true);
-
                 _context.Devices.Remove(device);
 
                 return await _context.SaveChangesAsync() > 0;
             }
             catch (DbUpdateException ex)
             {
-
                 throw new ApplicationException("删除设备失败， ", ex);
             }
         }
     }
-
-    public class ThresholdService
-    {
-        private readonly IoTDbContext _context;
-
-        public ThresholdService(IoTDbContext context)
-        {
-            _context = context;
-        }
-
-        public async Task<DeviceThreshold?> GetThresholdsByDeviceAsync(int deviceId)
-        {
-            return await _context.DeviceThresholds
-                .FirstOrDefaultAsync(t => t.DeviceId == deviceId);
-        }
-
-        public async Task<DeviceThreshold> AddOrUpdateThresholdAsync(DeviceThreshold threshold)
-        {
-            var existing = await _context.DeviceThresholds
-                .FirstOrDefaultAsync(t => t.DeviceId == threshold.DeviceId);
-
-            if (existing != null)
-            {
-                existing.TemperatureUpper = threshold.TemperatureUpper;
-                existing.TemperatureLower = threshold.TemperatureLower;
-                existing.HumidityUpper = threshold.HumidityUpper;
-                existing.HumidityLower = threshold.HumidityLower;
-                existing.CurrentUpper = threshold.CurrentUpper;
-                existing.CurrentLower = threshold.CurrentLower;
-                existing.VoltageUpper = threshold.VoltageUpper;
-                existing.VoltageLower = threshold.VoltageLower;
-            }
-            else
-            {
-                threshold.CreatedAt = DateTime.Now;
-                _context.DeviceThresholds.Add(threshold);
-            }
-
-            await _context.SaveChangesAsync();
-            return threshold;
-        }
-    }
-
-
     public class DeviceTableService
     {
         private readonly IConfiguration _configuration;
@@ -123,55 +120,9 @@ namespace IoTMonitor.Services
         }
 
 
-        /// <summary>
-        /// 获取数据库中所有表名
-        /// </summary>
-        public async Task<IEnumerable<string>> GetAllTableNamesAsync()
-        {
-            using var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
-            await connection.OpenAsync();
 
-            var sql = @"SELECT TABLE_NAME 
-                        FROM INFORMATION_SCHEMA.TABLES 
-                        WHERE TABLE_TYPE = 'BASE TABLE' 
-                        AND TABLE_CATALOG = @DatabaseName";
 
-            var databaseName = _configuration.GetConnectionString("DefaultConnection")
-                .Split(';')
-                .FirstOrDefault(x => x.StartsWith("Initial Catalog=", StringComparison.OrdinalIgnoreCase))
-                ?.Split('=')[1];
 
-            return await connection.QueryAsync<string>(sql, new { DatabaseName = databaseName });
-        }
-
-        /// <summary>
-        /// 验证表名是否合法（防止SQL注入）
-        /// </summary>
-        private bool IsValidTableName(string tableName)
-        {
-            if (string.IsNullOrWhiteSpace(tableName))
-                return false;
-
-            // 只允许字母、数字、下划线
-            return System.Text.RegularExpressions.Regex.IsMatch(tableName, @"^[a-zA-Z0-9_]+$");
-        }
-
-        /// <summary>
-        /// 检查表是否存在
-        /// </summary>
-        private async Task<bool> TableExistsAsync(string tableName)
-        {
-            using var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
-            await connection.OpenAsync();
-
-            var sql = @"SELECT COUNT(*) 
-                        FROM INFORMATION_SCHEMA.TABLES 
-                        WHERE TABLE_NAME = @TableName 
-                        AND TABLE_TYPE = 'BASE TABLE'";
-
-            var count = await connection.ExecuteScalarAsync<int>(sql, new { TableName = tableName });
-            return count > 0;
-        }
 
 
         /// <summary>
@@ -257,112 +208,135 @@ namespace IoTMonitor.Services
             return (data, totalCount);
         }
 
-        // 安全处理WHERE子句
-        private string SafeWhereClause(string where)
+
+
+        /// <summary>
+        /// 添加设备
+        /// </summary>
+        /// <param name="device"></param>
+        /// <returns></returns>
+        public async Task<DeviceTable> AddFactorAsync(DeviceTable device)
         {
-            // 移除潜在的SQL注入关键词
-            var dangerousKeywords = new[] { "DROP ", "DELETE ", "TRUNCATE ", "UPDATE ", "INSERT ", "EXEC ", "EXECUTE", ";" };
-            var safeWhere = where;
-
-            foreach (var keyword in dangerousKeywords)
+            try
             {
-                safeWhere = safeWhere.Replace(keyword, string.Empty, StringComparison.OrdinalIgnoreCase);
+                device.CreatedTime = DateTime.Now;
+                _context.DeviceTables.Add(device);
+                await _context.SaveChangesAsync();
+                return device;
             }
-
-            // 简单的验证：确保WHERE子句只包含有效的SQL表达式
-            if (!Regex.IsMatch(safeWhere, @"^[a-zA-Z0-9_\s\.@<>=!\(\)\'\""\-\+\*/%&|]+\s*$"))
+            catch (Exception ex)
             {
-                throw new ArgumentException("WHERE子句包含无效字符");
-            }
+                throw new ApplicationException("添加设备失败， ", ex);
 
-            return safeWhere;
+            }
         }
-
-        // 安全处理ORDER BY子句
-        private string SafeOrderByClause(string orderby)
+        /// <summary>
+        /// 更新设备
+        /// </summary>
+        /// <param name="device"></param>
+        /// <returns></returns>
+        public async Task<DeviceTable> UpdateFactorAsync(DeviceTable device)
         {
-            // 验证排序方向
-            var orderByParts = orderby.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            if (orderByParts.Length > 2)
+            try
             {
-                throw new ArgumentException("ORDER BY子句格式不正确");
-            }
+                // 先查询现有的设备
+                var existingDevice = await _context.DeviceTables
+                    .FirstOrDefaultAsync(d => d.Id == device.Id);
 
-            var columnName = orderByParts[0];
-
-            // 验证列名（只允许字母、数字和下划线）
-            if (!Regex.IsMatch(columnName, @"^[a-zA-Z_][a-zA-Z0-9_]*$"))
-            {
-                throw new ArgumentException("排序字段名无效");
-            }
-
-            var direction = "ASC";
-            if (orderByParts.Length > 1)
-            {
-                var dir = orderByParts[1].ToUpper();
-                if (dir == "ASC" || dir == "DESC")
+                if (existingDevice == null)
                 {
-                    direction = dir;
+                    throw new KeyNotFoundException($"未找到ID为 {device.Id} 的设备");
                 }
-                else
-                {
-                    throw new ArgumentException("排序方向必须是ASC或DESC");
-                }
+                existingDevice.Id = device.Id;//
+                existingDevice.TableName = device.TableName;//
+                existingDevice.FieldName = device.FieldName;//
+                existingDevice.FieldType = device.FieldType;//数据类型
+                existingDevice.DisplayName = device.DisplayName;//显示名称
+                existingDevice.DisplayUnit = device.DisplayUnit;//显示单位
+                existingDevice.SortOrder = device.SortOrder;//排序
+                existingDevice.IsVisible = device.IsVisible;//是否显示
+                existingDevice.CreatedTime = device.CreatedTime;//创建时间
+                existingDevice.Remarks = device.Remarks;//说明
+                existingDevice.MinValue = device.MinValue;//最小阈值
+                existingDevice.MaxValue = device.MaxValue;//最大阈值
+                existingDevice.IsThreshold = device.IsThreshold;//是否阈值
+                existingDevice.DataUnit = device.DataUnit;//数据单位
+
+ 
+
+                // 更新时间
+                existingDevice.CreatedTime = DateTime.Now;
+
+                // 不更新 fieldName，保持原值
+                // existingDevice.fieldName = device.fieldName; // 注释掉这行
+
+                _context.DeviceTables.Update(existingDevice);
+                await _context.SaveChangesAsync();
+                return existingDevice;
+                //device.CreatedTime = DateTime.Now;
+                //_context.DeviceTables.Update(device);
+                //await _context.SaveChangesAsync();
+                //return device;
+            }
+            catch (Exception ex)
+            {
+                throw new ApplicationException("更新设备失败， ", ex);
             }
 
-            return $"ORDER BY [{columnName}] {direction}";
         }
-
-        // 获取默认的排序（通常是时间字段）
-        private string GetDefaultOrderBy(string tableName, SqlConnection connection)
+        /// <summary>
+        /// 删除设备
+        /// </summary>
+        /// <param name="deviceId"></param>
+        /// <returns></returns>
+        /// <exception cref="ApplicationException"></exception>
+        public async Task<bool> DeleteDeviceAsync(int Id)
         {
-            // 尝试查找时间字段
-            var timeFields = new[] { "createdAt", "create_time", "recordTime", "timestamp", "update_time" };
-
-            var columnsSql = @"
-        SELECT COLUMN_NAME 
-        FROM INFORMATION_SCHEMA.COLUMNS 
-        WHERE TABLE_NAME = @TableName 
-        ORDER BY ORDINAL_POSITION";
-
-            var columns = connection.Query<string>(columnsSql, new { TableName = tableName });
-
-            foreach (var field in timeFields)
+            try
             {
-                if (columns.Any(c => c.Equals(field, StringComparison.OrdinalIgnoreCase)))
+                // 使用 Include 加载所有关联数据
+                var device = await _context.DeviceTables.FirstOrDefaultAsync(d => d.Id == Id);
+                if (device == null)
                 {
-                    return $"ORDER BY [{field}] DESC";
+                    return false;
                 }
+                _context.DeviceTables.Remove(device);
+
+                return await _context.SaveChangesAsync() > 0;
             }
-
-            // 如果没有找到时间字段，使用第一个字段
-            var firstColumn = columns.FirstOrDefault();
-            if (!string.IsNullOrEmpty(firstColumn))
+            catch (DbUpdateException ex)
             {
-                return $"ORDER BY [{firstColumn}] ASC";
-            }
-
-            return "ORDER BY (SELECT NULL)";
-        }
-
-        // 添加WHERE参数
-        private void AddWhereParameters(DynamicParameters parameters, string where)
-        {
-            // 简单的参数提取（实际应用中可能需要更复杂的解析）
-            // 这里假设参数格式为：field = @paramName
-            var matches = Regex.Matches(where, @"@(\w+)");
-
-            foreach (Match match in matches)
-            {
-                if (match.Success)
-                {
-                    var paramName = match.Groups[1].Value;
-                    // 这里需要根据实际情况设置参数值
-                    // 在实际应用中，你可能需要传入一个参数字典
-                    parameters.Add(paramName, DBNull.Value);
-                }
+                throw new ApplicationException("删除设备失败， ", ex);
             }
         }
 
+        /// <summary>
+        /// 验证表名是否合法（防止SQL注入）
+        /// </summary>
+        private bool IsValidTableName(string tableName)
+        {
+            if (string.IsNullOrWhiteSpace(tableName))
+                return false;
+
+            // 只允许字母、数字、下划线
+            return System.Text.RegularExpressions.Regex.IsMatch(tableName, @"^[a-zA-Z0-9_]+$");
+        }
+
+        /// <summary>
+        /// 检查表是否存在
+        /// </summary>
+        private async Task<bool> TableExistsAsync(string tableName)
+        {
+            using var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
+            await connection.OpenAsync();
+
+            var sql = @"SELECT COUNT(*) 
+                        FROM INFORMATION_SCHEMA.TABLES 
+                        WHERE TABLE_NAME = @TableName 
+                        AND TABLE_TYPE = 'BASE TABLE'";
+
+            var count = await connection.ExecuteScalarAsync<int>(sql, new { TableName = tableName });
+            return count > 0;
+        }
     }
 }

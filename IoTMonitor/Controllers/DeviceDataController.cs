@@ -21,50 +21,45 @@ namespace IoTMonitor.Controllers
         {
             _service = service;
         }
-
+        /// <summary>
+        /// 获取设备
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
             return Ok(await _service.GetAllDevicesAsync());
         }
-
-        [HttpPost("add")]
-        public async Task<IActionResult> Add([FromBody] Device device)
+        /// <summary>
+        /// 添加设备
+        /// </summary>
+        /// <param name="device"></param>
+        /// <returns></returns>
+        [HttpPost("addDevice")]
+        public async Task<IActionResult> AddDevice([FromBody] Device device)
         {
             return Ok(await _service.AddDeviceAsync(device));
         }
+        /// <summary>
+        /// 修改设备
+        /// </summary>
+        /// <param name="deviceId"></param>
+        /// <returns></returns>
+        [HttpPost("updateDevice")]
+        public async Task<IActionResult> UpdateDevice([FromBody] Device device)
+        {
+            return Ok(await _service.UpdateDeviceAsync(device));
+        }
 
-        
-
+        /// <summary>
+        /// 删除设备
+        /// </summary>
+        /// <param name="deviceId"></param>
+        /// <returns></returns>
         [HttpGet("deleteDevice")]
-        public async Task<IActionResult> deleteDevice(int deviceId)
+        public async Task<IActionResult> DeleteDevice(int deviceId)
         {
             return Ok(await _service.DeleteDeviceAsync(deviceId));
-        }
-    }
-
-    // Controllers/ThresholdsController.cs
-    [ApiController]
-    [Route("api/[controller]")]
-    public class ThresholdsController : ControllerBase
-    {
-        private readonly ThresholdService _service;
-
-        public ThresholdsController(ThresholdService service)
-        {
-            _service = service;
-        }
-
-        [HttpGet("{deviceId}")]
-        public async Task<IActionResult> GetThresholds(int deviceId)
-        {
-            return Ok(await _service.GetThresholdsByDeviceAsync(deviceId));
-        }
-
-        [HttpPost("set")]
-        public async Task<IActionResult> SetThreshold([FromBody] DeviceThreshold threshold)
-        {
-            return Ok(await _service.AddOrUpdateThresholdAsync(threshold));
         }
     }
 
@@ -79,8 +74,30 @@ namespace IoTMonitor.Controllers
         {
             _service = service;
         }
+
         /// <summary>
-        /// 根据表名查询数据
+        /// 获取表字段
+        /// </summary>
+        /// <param name="tablename"></param>
+        /// <returns></returns>
+        [HttpGet("fieldByTableName")]
+        public async Task<IActionResult> GetfieldByTableName(string tablename)
+        {
+            try
+            {
+                var result = await _service.GetablenameByDataAsync(tablename);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                // 记录错误，方便调试s
+                Console.WriteLine(ex);
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// 根据表名查询表数据
         /// </summary>
         /// <param name="tableName">表名</param>
         /// <returns>表数据</returns>
@@ -158,19 +175,6 @@ namespace IoTMonitor.Controllers
 
                 };
                 return Ok(datarest);
-                //return Ok(new
-                //{
-                //    success = true,
-                //    data = data,
-                //    tableName = tableName,
-                //    deviceName = device.DeviceName,
-                //    pageNumber = pageNumber,
-                //    pageSize = pageSize,
-                //    totalCount = totalCount,
-                //    totalPages = (int)Math.Ceiling(totalCount / (double)pageSize),
-                //    startTime = startTime,
-                //    endTime = endTime
-                //});
             }
             catch (ArgumentException ex)
             {
@@ -186,46 +190,47 @@ namespace IoTMonitor.Controllers
                 });
             }
         }
+
+
+
         /// <summary>
-        /// 获取数据库中所有表名
+        /// 添加设备因子
         /// </summary>
-        [HttpGet("tables")]
-        public async Task<IActionResult> GetAllTableNames()
+        /// <param name="device"></param>
+        /// <returns></returns>
+        [HttpPost("addFactor")]
+        public async Task<IActionResult> AddFactor([FromBody] DeviceTable device)
         {
-            try
-            {
-                var tables = await _service.GetAllTableNamesAsync();
-                return Ok(new
-                {
-                    success = true,
-                    tables = tables,
-                    count = tables.Count()
-                });
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"获取表名列表时出错: {ex.Message}");
-                return StatusCode(500, new
-                {
-                    success = false,
-                    message = "服务器内部错误"
-                });
-            }
+            return Ok(await _service.AddFactorAsync(device));
         }
-        [HttpGet("fieldByTableName")]
-        public async Task<IActionResult> GetfieldByTableName(string tablename)
+        /// <summary>
+        /// 修改设备因子
+        /// </summary>
+        /// <param name="deviceId"></param>
+        /// <returns></returns>
+        [HttpPost("updateFactor")]
+        public async Task<IActionResult> UpdateFactor([FromBody] DeviceTable device)
         {
-            try
-            {
-                var result = await _service.GetablenameByDataAsync(tablename);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                // 记录错误，方便调试s
-                Console.WriteLine(ex);
-                return StatusCode(500, ex.Message);
-            }
+            return Ok(await _service.UpdateFactorAsync(device));
         }
+
+        /// <summary>
+        /// 删除设备因子
+        /// </summary>
+        /// <param name="deviceId"></param>
+        /// <returns></returns>
+        [HttpGet("deleteFactor")]
+        public async Task<IActionResult> DeleteFactor(int id,string tableName)
+        {
+            return Ok(await _service.DeleteDeviceAsync(id));
+        }
+
+
+
+
+
+
+
+
     }
 }

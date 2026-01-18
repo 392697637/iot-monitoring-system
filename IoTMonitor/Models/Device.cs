@@ -17,38 +17,6 @@ namespace IoTMonitor.Models
         public string? DeviceTableID { get; set; }
         
     }
-
-    public class DeviceThreshold
-    {
-        public int ThresholdId { get; set; }
-        public int DeviceId { get; set; }
-
-        public double? TemperatureUpper { get; set; }
-        public double? TemperatureLower { get; set; }
-        public double? HumidityUpper { get; set; }
-        public double? HumidityLower { get; set; }
-        public double? CurrentUpper { get; set; }
-        public double? CurrentLower { get; set; }
-        public double? VoltageUpper { get; set; }
-        public double? VoltageLower { get; set; }
-
-        public DateTime CreatedAt { get; set; }
-
-        public Device Device { get; set; } = null!;
-    }
-
-    public class DeviceAlarm
-    {
-        public long AlarmId { get; set; } // ✅ 主键
-        public int DeviceId { get; set; }
-        public string AlarmType { get; set; } = string.Empty;
-        public double AlarmValue { get; set; }
-        public DateTime CreatedAt { get; set; }
-
-        public Device Device { get; set; } = null!;
-    }
-
-
     /// <summary>
     /// 设备表配置实体
     /// 用于管理设备数据表的字段配置信息
@@ -61,7 +29,7 @@ namespace IoTMonitor.Models
         /// </summary>
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        [Column("ID")]
+        [Column("Id")]
         public long Id { get; set; }
 
         /// <summary>
@@ -132,7 +100,7 @@ namespace IoTMonitor.Models
         /// 存储为字符串以适应不同类型的阈值（数值、文本匹配等）
         /// </summary>
         [StringLength(100, ErrorMessage = "最小阈值长度不能超过100个字符")]
-        [Column("minValue")]
+        [Column("MinValue")]
         public string? MinValue { get; set; }
 
         /// <summary>
@@ -140,7 +108,7 @@ namespace IoTMonitor.Models
         /// 存储为字符串以适应不同类型的阈值（数值、文本匹配等）
         /// </summary>
         [StringLength(100, ErrorMessage = "最大阈值长度不能超过100个字符")]
-        [Column("maxValue")]
+        [Column("MaxValue")]
         public string? MaxValue { get; set; }
 
         /// <summary>
