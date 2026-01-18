@@ -20,7 +20,6 @@
           <el-menu-item index="realtime">实时监控</el-menu-item>
           <el-menu-item index="history">历史数据</el-menu-item>
           <el-menu-item index="devices">设备管理</el-menu-item>
-          <el-menu-item index="threshold">阈值设置</el-menu-item>
         </el-menu>
       </el-aside>
 
@@ -44,7 +43,6 @@ import { ref, computed, onMounted } from 'vue'
 import RealtimeMonitor from '@/components/RealtimeMonitor.vue'
 import HistoryData from '@/components/HistoryData.vue'
 import DevicesManagement from '@/components/DevicesManagement.vue'
-import ThresholdSetting from '@/components/ThresholdSetting.vue'
 
 // API
 import { getDevices } from '@/api/device'
@@ -62,7 +60,6 @@ const currentComponent = computed(() => {
     case 'realtime': return RealtimeMonitor
     case 'history': return HistoryData
     case 'devices': return DevicesManagement
-    case 'threshold': return ThresholdSetting
     default: return RealtimeMonitor
   }
 })

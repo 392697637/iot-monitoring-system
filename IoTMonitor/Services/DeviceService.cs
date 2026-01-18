@@ -14,105 +14,9 @@ using System.Text.RegularExpressions;
 namespace IoTMonitor.Services
 {
 
-    public class DeviceDataService
-    {
-
-        private readonly IoTDbContext _context;
-
-        public DeviceDataService(IoTDbContext context)
-        {
-            _context = context;
-        }
-        // 添加设备数据，并检查阈值
-        public async Task<DeviceData> AddDeviceDataAsync(DeviceData data)
-        {
-            data.Status = "正常";
-
-            var thresholds = await _context.DeviceThresholds
-                .FirstOrDefaultAsync(t => t.DeviceId == data.DeviceId);
-
-            if (thresholds != null)
-            {
-                if ((thresholds.TemperatureUpper.HasValue && data.Temperature > thresholds.TemperatureUpper.Value) ||
-                    (thresholds.TemperatureLower.HasValue && data.Temperature < thresholds.TemperatureLower.Value))
-                {
-                    data.Status = "温度异常";
-                    await AddAlarmAsync(data.DeviceId, "Temperature", data.Temperature);
-                }
-
-                if ((thresholds.HumidityUpper.HasValue && data.Humidity > thresholds.HumidityUpper.Value) ||
-                    (thresholds.HumidityLower.HasValue && data.Humidity < thresholds.HumidityLower.Value))
-                {
-                    data.Status = "湿度异常";
-                    await AddAlarmAsync(data.DeviceId, "Humidity", data.Humidity);
-                }
-
-                if ((thresholds.CurrentUpper.HasValue && data.Current > thresholds.CurrentUpper.Value) ||
-                    (thresholds.CurrentLower.HasValue && data.Current < thresholds.CurrentLower.Value))
-                {
-                    data.Status = "电流异常";
-                    await AddAlarmAsync(data.DeviceId, "Current", data.Current);
-                }
-
-                if ((thresholds.VoltageUpper.HasValue && data.Voltage > thresholds.VoltageUpper.Value) ||
-                    (thresholds.VoltageLower.HasValue && data.Voltage < thresholds.VoltageLower.Value))
-                {
-                    data.Status = "电压异常";
-                    await AddAlarmAsync(data.DeviceId, "Voltage", data.Voltage);
-                }
-            }
-
-            _context.DeviceDatas.Add(data);
-            await _context.SaveChangesAsync();
-            return data;
-        }
-
-        private async Task AddAlarmAsync(int deviceId, string factor, double value)
-        {
-            var alarm = new DeviceAlarm
-            {
-                DeviceId = deviceId,
-                AlarmType = factor,
-                AlarmValue = value,
-                CreatedAt = DateTime.Now
-            };
-            _context.DeviceAlarms.Add(alarm);
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task<List<DeviceData>> GetDeviceHistoryAsync(int deviceId, DateTime start, DateTime end)
-        {
-
-            var list = GetDeviceHistoryList(deviceId, start, end);
-            return await list;
-            //return await _context.DeviceDatas
-            //    .Where(d => d.DeviceId == deviceId && d.CreatedAt >= start && d.CreatedAt <= end)
-            //    .OrderByDescending(d => d.CreatedAt)
-            //    .ToListAsync();
-        }
-        public async Task<List<DeviceData>> GetDeviceHistoryList(int deviceId, DateTime start, DateTime end)
-        {
-            return await _context.DeviceDatas
-                .Where(d => d.DeviceId == deviceId && d.CreatedAt >= start && d.CreatedAt <= end)
-                .OrderByDescending(d => d.CreatedAt).ToListAsync();
-            ////start = DateTime.Parse("2026-01-01 00:00");
-            ////end = DateTime.Parse("2026-02-01 00:00");
-            //return await _context.DeviceDatas
-            //   .Where(d => d.DeviceId == deviceId && d.CreatedAt >= start && d.CreatedAt <= end).ToListAsync();
-            ////return await _context.DeviceDatas.Where(d => d.DeviceId == deviceId).ToListAsync();
-            ////return await _context.DeviceDatas.ToListAsync();
-        }
-        public async Task<DeviceData?> GetLatestDeviceDataAsync(int deviceId)
-        {
-            return await _context.DeviceDatas
-                .Where(d => d.DeviceId == deviceId)
-                .OrderByDescending(d => d.CreatedAt)
-                .FirstOrDefaultAsync();
-        }
-
-    }
-
-
+    /// <summary>
+    /// 设备服务
+    /// </summary>
     public class DeviceService
     {
         private readonly IoTDbContext _context;
@@ -124,22 +28,10 @@ namespace IoTMonitor.Services
 
         public async Task<List<Device>> GetAllDevicesAsync()
         {
-            return await _context.Devices
-                .Include(d => d.DeviceDatas)
-                .Include(d => d.DeviceThresholds)
-                .Include(d => d.DeviceAlarms)
-                .ToListAsync();
+            return await _context.Devices.ToListAsync();
 
         }
-
-        public async Task<List<Device>> GetAllDevicesAsyncs()
-        {
-            return await _context.Devices
-                .Include(d => d.DeviceDatas)
-                .Include(d => d.DeviceThresholds)
-                .Include(d => d.DeviceAlarms)
-                .ToListAsync();
-        }
+    
         public async Task<Device> AddDeviceAsync(Device device)
         {
             device.CreatedAt = DateTime.Now;
@@ -295,7 +187,7 @@ namespace IoTMonitor.Services
         /// 分页查询表数据
         /// </summary>
         public async Task<(IEnumerable<dynamic> Data, int TotalCount)> GetDataByTableNamePagedAsync(
-            string tableName, string orderby, string where  , int pageNumber = 1, int pageSize = 20)
+            string tableName, string orderby, string where, int pageNumber = 1, int pageSize = 20)
         {
             if (!IsValidTableName(tableName))
                 throw new ArgumentException("无效的表名");

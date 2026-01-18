@@ -7,53 +7,8 @@ using System.Threading.Tasks;
 namespace IoTMonitor.Controllers
 {
     using Humanizer;
-
-    // Controllers/DeviceDataController.cs
     using Microsoft.AspNetCore.Mvc;
-    using Microsoft.Data.SqlClient;
-    using Microsoft.EntityFrameworkCore.Metadata.Internal;
-
-    [ApiController]
-    [Route("api/[controller]")]
-    public class DeviceDataController : ControllerBase
-    {
-        private readonly DeviceDataService _service;
-
-        public DeviceDataController(DeviceDataService service)
-        {
-            _service = service;
-        }
-
-        [HttpPost("add")]
-        public async Task<IActionResult> AddDeviceData([FromBody] DeviceData data)
-        {
-            var result = await _service.AddDeviceDataAsync(data);
-            return Ok(result);
-        }
-
-        [HttpGet("latest")]
-        public async Task<IActionResult> GetLatest(int deviceId)
-        {
-            var result = await _service.GetLatestDeviceDataAsync(deviceId);
-            return Ok(result);
-        }
-
-        [HttpGet("history")]
-        public async Task<IActionResult> GetHistory(int deviceId, DateTime start, DateTime end)
-        {
-            try
-            {
-                var result = await _service.GetDeviceHistoryAsync(deviceId, start, end);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                // 记录错误，方便调试s
-                Console.WriteLine(ex);
-                return StatusCode(500, ex.Message);
-            }
-        }
-    }
+ 
 
     // Controllers/DevicesController.cs
     [ApiController]
