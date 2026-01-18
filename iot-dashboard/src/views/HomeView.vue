@@ -1,12 +1,12 @@
 <template>
-  <el-container style="height: 100vh;">
+  <el-container style="height: 98vh;">
     <!-- 顶部 -->
-    <el-header style="background: #1f2d3d; color: white; font-size: 20px; font-weight: bold;">
+    <el-header style="background: #1f2d3d; color: white; font-size: 20px; font-weight: bold; ">
       物联网管理系统
     </el-header>
 
     <!-- 左右布局 -->
-    <el-container>
+    <el-container  >
       <!-- 左侧菜单 -->
       <el-aside width="200px" style="background: #2e3c4e; color:white;">
         <el-menu
@@ -73,7 +73,7 @@ const handleMenuSelect = (index) => {
 const fetchDevices = async () => {
   try {
     const res = await getDevices()
-    devices.value = res.data
+    devices.value = res
     if (devices.value.length > 0 && !selectedDeviceId.value) {
       selectedDeviceId.value = devices.value[0].deviceId
     }

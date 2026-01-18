@@ -33,6 +33,14 @@ namespace IoTMonitor.Controllers
         {
             return Ok(await _service.AddDeviceAsync(device));
         }
+
+        
+
+        [HttpGet("deleteDevice")]
+        public async Task<IActionResult> deleteDevice(int deviceId)
+        {
+            return Ok(await _service.DeleteDeviceAsync(deviceId));
+        }
     }
 
     // Controllers/ThresholdsController.cs
@@ -137,17 +145,19 @@ namespace IoTMonitor.Controllers
                 if (pageSize < 1 || pageSize > 100) pageSize = 20;
 
                 var (data, totalCount) = await _service.GetDataByTableNamePagedAsync(tableName, orderby, where, pageNumber, pageSize);
-
-                return Ok(new
+                var datarest = new
                 {
                     success = true,
-                    data = data,
+                    dataTable = data,
                     tableName = tableName,
                     pageNumber = pageNumber,
                     pageSize = pageSize,
                     totalCount = totalCount,
                     totalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
-                });
+
+
+                };
+                return Ok(datarest);
                 //return Ok(new
                 //{
                 //    success = true,

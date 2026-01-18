@@ -10,13 +10,11 @@ namespace IoTMonitor.Models
     {
         public int DeviceId { get; set; }
         public string DeviceName { get; set; } = string.Empty;
-        public string? Location { get; set; }
+        public string? DeviceType { get; set; }
         public string? Description { get; set; }
         public DateTime CreatedAt { get; set; }
         public string? DeviceTable { get; set; }
-
         public string? DeviceTableID { get; set; }
-        
         
     }
 
@@ -157,6 +155,6 @@ namespace IoTMonitor.Models
         [StringLength(50, ErrorMessage = "数据单位长度不能超过50个字符")]
         [Column("DataUnit")]
         public string? DataUnit { get; set; }
-       
+
     }
 }

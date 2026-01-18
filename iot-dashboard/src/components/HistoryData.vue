@@ -351,7 +351,7 @@ const loadDevices = async () => {
   try {
     loading.value = true;
     const res = await getDevices();
-    devices.value = res.data || [];
+    devices.value = res || [];
 
     if (devices.value.length > 0) {
       selectedDeviceId.value = devices.value[0].deviceId;
@@ -384,7 +384,7 @@ const loadDeviceTable = async (tableName) => {
   try {
     loading.value = true;
     const res = await getDeviceTable(tableName);
-    const columns = res.data || [];
+    const columns = res || [];
 
     tableColumns.value = columns
       .filter((col) => col.isVisible)
@@ -463,9 +463,9 @@ const search = async () => {
     const res = await getHistoryData(params);
 
     // 处理返回数据
-    if (res.data && res.data.success) {
-      list.value = res.data.data || [];
-      pagination.value.total = res.data.totalCount || 0;
+    if (res && res.success) {
+      list.value = res.dataTable || [];
+      pagination.value.total = res.totalCount || 0;
       
       if (list.value.length === 0) {
         ElMessage.info("该时间范围内没有数据");
@@ -473,7 +473,7 @@ const search = async () => {
         ElMessage.success(`查询到 ${pagination.value.total} 条记录，当前显示 ${list.value.length} 条`);
       }
     } else {
-      ElMessage.error(res.data?.message || "查询失败");
+      ElMessage.error(res?.message || "查询失败");
       list.value = [];
       pagination.value.total = 0;
     }
@@ -602,8 +602,8 @@ const exportAllData = async () => {
     
     const res = await getHistoryData(params);
     
-    if (res.data && res.data.success) {
-      const allData = res.data.data || [];
+    if (res && res.success) {
+      const allData =res.dataTable || [];
       
       if (allData.length === 0) {
         ElMessage.warning('没有数据可导出');

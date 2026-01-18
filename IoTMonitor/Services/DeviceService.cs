@@ -31,13 +31,39 @@ namespace IoTMonitor.Services
             return await _context.Devices.ToListAsync();
 
         }
-    
+
         public async Task<Device> AddDeviceAsync(Device device)
         {
             device.CreatedAt = DateTime.Now;
             _context.Devices.Add(device);
             await _context.SaveChangesAsync();
             return device;
+        }
+        public async Task<bool> DeleteDeviceAsync(int deviceId)
+        {
+            try
+            {
+                // 使用 Include 加载所有关联数据
+                var device = await _context.Devices
+                    .FirstOrDefaultAsync(d => d.DeviceId == deviceId);
+
+                if (device == null)
+                {
+                    return false;
+                }
+
+                // 方法2：设置关联数据为软删除状态（如果允许）
+                // device.Alerts?.ForEach(a => a.IsDeleted = true);
+
+                _context.Devices.Remove(device);
+
+                return await _context.SaveChangesAsync() > 0;
+            }
+            catch (DbUpdateException ex)
+            {
+
+                throw new ApplicationException("删除设备失败， ", ex);
+            }
         }
     }
 
