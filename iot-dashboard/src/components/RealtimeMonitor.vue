@@ -30,16 +30,11 @@ import {
   getDataByTableName,
 } from "../api/device";
 
-const devices = ref([]);
-const deviceId = ref(null);
-const tablename = ref(null);
+const devices = ref([]); //设备数据
+const deviceId = ref(null); //设备ID
+const tablename = ref(null); //设备名称
 
-const metrics = ref([
-  { label: "温度 (℃)", value: "-", alarm: false },
-  { label: "湿度 (%)", value: "-", alarm: false },
-  { label: "电压 (V)", value: "-", alarm: false },
-  { label: "电流 (A)", value: "-", alarm: false },
-]);
+const metrics = ref([]); //设备因子
 
 let timer = null;
 const alarmAudio = new Audio("/data/alarm.mp3");
@@ -62,7 +57,13 @@ const loadDeviceTable = async () => {
   const d = res.data;
   if (!d) return;
   d.forEach((m) => {
-    metrics.value.push({ label: m.displayName, value: "-", alarm: false });
+    if (m.isVisible)
+      metrics.value.push({
+        label: m.displayName,
+        value: "-",
+        alarm: false,
+        fieldName: m.fieldName,
+      });
   });
 };
 //数据添加
@@ -70,16 +71,15 @@ const loadData = async () => {
   if (!tablename.value) return;
   var topNumber = 1;
   var orderby = "DID";
-  const res = await getDataByTableName(tablename.value, topNumber, orderby);
+  const res = await getDataByTableName(tablename.value, orderby, topNumber);
   const d = res.data;
-  debugger;
   if (!d) return;
- var seledata= d.data[0];
-    debugger;
-    metrics.value.forEach((metr) => {
-      metr.value=seledata[metr.label]
-    })
-    
+  var seledata = d.data[0];
+  metrics.value.forEach((metr) => {
+    if (seledata[metr.fieldName] != "") metr.value = seledata[metr.fieldName].replace(/T/g, ' ');
+    else metr.value = "-";
+  });
+
   var status = 0;
   //告警
   if (status === 1) alarmAudio.play();

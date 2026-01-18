@@ -1,18 +1,22 @@
 ﻿using Dapper;
 using IoTMonitor.Data;
 using IoTMonitor.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.CodeAnalysis;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using System.Data;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace IoTMonitor.Services
 {
 
-    public class DeviceDataService  
+    public class DeviceDataService
     {
-        
+
         private readonly IoTDbContext _context;
 
         public DeviceDataService(IoTDbContext context)
@@ -105,9 +109,9 @@ namespace IoTMonitor.Services
                 .OrderByDescending(d => d.CreatedAt)
                 .FirstOrDefaultAsync();
         }
-     
+
     }
-    
+
 
     public class DeviceService
     {
@@ -196,10 +200,10 @@ namespace IoTMonitor.Services
         public DeviceTableService(IoTDbContext context)
         {
             _context = context;
-            
-            _configuration= _context.GetService<IConfiguration>();
+
+            _configuration = _context.GetService<IConfiguration>();
         }
-     
+
 
         /// <summary>
         /// 获取数据库中所有表名
@@ -251,55 +255,21 @@ namespace IoTMonitor.Services
             return count > 0;
         }
 
-        /// <summary>
-        /// 分页查询表数据
-        /// </summary>
-        public async Task<(IEnumerable<dynamic> Data, int TotalCount)> GetDataByTableNamePagedAsync(
-            string tableName, int pageNumber = 1, int pageSize = 20)
-        {
-            if (!IsValidTableName(tableName))
-                throw new ArgumentException("无效的表名");
 
-            if (!await TableExistsAsync(tableName))
-                throw new ArgumentException($"表 '{tableName}' 不存在");
-
-            using var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
-            await connection.OpenAsync();
-
-            // 获取总记录数
-            var countSql = $"SELECT COUNT(*) FROM [{tableName}]";
-            var totalCount = await connection.ExecuteScalarAsync<int>(countSql);
-
-            // 分页查询数据
-            var dataSql = $@"
-                SELECT * FROM [{tableName}]
-                ORDER BY (SELECT NULL)
-                OFFSET @Offset ROWS
-                FETCH NEXT @PageSize ROWS ONLY";
-
-            var offset = (pageNumber - 1) * pageSize;
-            var data = await connection.QueryAsync(dataSql, new
-            {
-                Offset = offset,
-                PageSize = pageSize
-            });
-
-            return (data, totalCount);
-        }
         /// <summary>
         /// 获取表名
         /// </summary>
         /// <param name="tablename"></param>
         /// <returns></returns>
         public async Task<List<DeviceTable>> GetablenameByDataAsync(string tablename)
-        { 
-            
-            return await _context.DeviceTables.Where(d => d.TableName == tablename).ToListAsync(); 
+        {
+
+            return await _context.DeviceTables.Where(d => d.TableName == tablename).ToListAsync();
         }
         /// <summary>
         /// 根据表名动态查询数据
         /// </summary>
-        public async Task<IEnumerable<dynamic>> GetDataByTableNameAsync(string tableName,int topNumber, string orderby)
+        public async Task<IEnumerable<dynamic>> GetDataByTableNameAsync(string tableName, string orderby, int topNumber)
         {
             // 验证表名合法性，防止SQL注入
             if (!IsValidTableName(tableName))
@@ -320,5 +290,161 @@ namespace IoTMonitor.Services
             var sql = $"SELECT TOP({topNumber})* FROM [{tableName}]   ORDER BY {orderby} DESC ";
             return await connection.QueryAsync(sql);
         }
+
+        /// <summary>
+        /// 分页查询表数据
+        /// </summary>
+        public async Task<(IEnumerable<dynamic> Data, int TotalCount)> GetDataByTableNamePagedAsync(
+            string tableName, string orderby, string where  , int pageNumber = 1, int pageSize = 20)
+        {
+            if (!IsValidTableName(tableName))
+                throw new ArgumentException("无效的表名");
+
+            if (!await TableExistsAsync(tableName))
+                throw new ArgumentException($"表 '{tableName}' 不存在");
+
+            using var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
+            await connection.OpenAsync();
+
+            // 获取总记录数
+            var countSql = $"SELECT COUNT(*) FROM [{tableName}]";
+            var totalCount = await connection.ExecuteScalarAsync<int>(countSql);
+
+            //// 分页查询数据
+            //var dataSql = $@"
+            //    SELECT * FROM [{tableName}]
+            //    ORDER BY (SELECT NULL)
+            //    OFFSET @Offset ROWS
+            //    FETCH NEXT @PageSize ROWS ONLY";
+
+            // 安全地构建SQL语句
+            var sqlBuilder = new StringBuilder();
+
+            // 构建基础SQL
+            sqlBuilder.AppendLine($"SELECT * FROM [{tableName}]");
+            sqlBuilder.AppendLine(where);
+            sqlBuilder.AppendLine(orderby);
+            sqlBuilder.AppendLine($"OFFSET @Offset ROWS");
+            sqlBuilder.AppendLine($"FETCH NEXT @PageSize ROWS ONLY");
+
+            var dataSql = sqlBuilder.ToString();
+
+            var offset = (pageNumber - 1) * pageSize;
+            var data = await connection.QueryAsync(dataSql, new
+            {
+                Offset = offset,
+                PageSize = pageSize
+            });
+
+            return (data, totalCount);
+        }
+
+        // 安全处理WHERE子句
+        private string SafeWhereClause(string where)
+        {
+            // 移除潜在的SQL注入关键词
+            var dangerousKeywords = new[] { "DROP ", "DELETE ", "TRUNCATE ", "UPDATE ", "INSERT ", "EXEC ", "EXECUTE", ";" };
+            var safeWhere = where;
+
+            foreach (var keyword in dangerousKeywords)
+            {
+                safeWhere = safeWhere.Replace(keyword, string.Empty, StringComparison.OrdinalIgnoreCase);
+            }
+
+            // 简单的验证：确保WHERE子句只包含有效的SQL表达式
+            if (!Regex.IsMatch(safeWhere, @"^[a-zA-Z0-9_\s\.@<>=!\(\)\'\""\-\+\*/%&|]+\s*$"))
+            {
+                throw new ArgumentException("WHERE子句包含无效字符");
+            }
+
+            return safeWhere;
+        }
+
+        // 安全处理ORDER BY子句
+        private string SafeOrderByClause(string orderby)
+        {
+            // 验证排序方向
+            var orderByParts = orderby.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (orderByParts.Length > 2)
+            {
+                throw new ArgumentException("ORDER BY子句格式不正确");
+            }
+
+            var columnName = orderByParts[0];
+
+            // 验证列名（只允许字母、数字和下划线）
+            if (!Regex.IsMatch(columnName, @"^[a-zA-Z_][a-zA-Z0-9_]*$"))
+            {
+                throw new ArgumentException("排序字段名无效");
+            }
+
+            var direction = "ASC";
+            if (orderByParts.Length > 1)
+            {
+                var dir = orderByParts[1].ToUpper();
+                if (dir == "ASC" || dir == "DESC")
+                {
+                    direction = dir;
+                }
+                else
+                {
+                    throw new ArgumentException("排序方向必须是ASC或DESC");
+                }
+            }
+
+            return $"ORDER BY [{columnName}] {direction}";
+        }
+
+        // 获取默认的排序（通常是时间字段）
+        private string GetDefaultOrderBy(string tableName, SqlConnection connection)
+        {
+            // 尝试查找时间字段
+            var timeFields = new[] { "createdAt", "create_time", "recordTime", "timestamp", "update_time" };
+
+            var columnsSql = @"
+        SELECT COLUMN_NAME 
+        FROM INFORMATION_SCHEMA.COLUMNS 
+        WHERE TABLE_NAME = @TableName 
+        ORDER BY ORDINAL_POSITION";
+
+            var columns = connection.Query<string>(columnsSql, new { TableName = tableName });
+
+            foreach (var field in timeFields)
+            {
+                if (columns.Any(c => c.Equals(field, StringComparison.OrdinalIgnoreCase)))
+                {
+                    return $"ORDER BY [{field}] DESC";
+                }
+            }
+
+            // 如果没有找到时间字段，使用第一个字段
+            var firstColumn = columns.FirstOrDefault();
+            if (!string.IsNullOrEmpty(firstColumn))
+            {
+                return $"ORDER BY [{firstColumn}] ASC";
+            }
+
+            return "ORDER BY (SELECT NULL)";
+        }
+
+        // 添加WHERE参数
+        private void AddWhereParameters(DynamicParameters parameters, string where)
+        {
+            // 简单的参数提取（实际应用中可能需要更复杂的解析）
+            // 这里假设参数格式为：field = @paramName
+            var matches = Regex.Matches(where, @"@(\w+)");
+
+            foreach (Match match in matches)
+            {
+                if (match.Success)
+                {
+                    var paramName = match.Groups[1].Value;
+                    // 这里需要根据实际情况设置参数值
+                    // 在实际应用中，你可能需要传入一个参数字典
+                    parameters.Add(paramName, DBNull.Value);
+                }
+            }
+        }
+
     }
 }

@@ -122,11 +122,11 @@ namespace IoTMonitor.Controllers
         /// <param name="tableName">表名</param>
         /// <returns>表数据</returns>
         [HttpGet("dataByTableName")]
-        public async Task<IActionResult> GetDataByTableName(string tableName,int topNumber, string orderby)
+        public async Task<IActionResult> GetDataByTableName(string tableName, string orderby, int topNumber)
         {
             try
             {
-                var result = await _service.GetDataByTableNameAsync(tableName, topNumber, orderby);
+                var result = await _service.GetDataByTableNameAsync(tableName, orderby, topNumber);
                 return Ok(new
                 {
                     success = true,
@@ -155,18 +155,33 @@ namespace IoTMonitor.Controllers
         /// <summary>
         /// 分页查询表数据
         /// </summary>
+        /// <param name="deviceId">设备ID</param>
         /// <param name="tableName">表名</param>
-        /// <param name="pageNumber">页码（默认1）</param>
-        /// <param name="pageSize">每页大小（默认20）</param>
-        [HttpGet("{tableName}/paged")]
-        public async Task<IActionResult> GetDataByTableNamePaged(string tableName, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20)
+        /// <param name="startTime">开始时间</param>
+        /// <param name="endTime">结束时间</param>
+        /// <param name="pageNumber">页码</param>
+        /// <param name="pageSize">每页大小</param>
+        /// <returns></returns>
+        [HttpGet("dataByHistory")]
+        public async Task<IActionResult> GetDataByHistoryPaged(
+            [FromQuery] string tableName,
+            [FromQuery] string orderby,
+            [FromQuery] string where,
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 20)
         {
             try
             {
+                // 参数验证
+                if (string.IsNullOrEmpty(tableName))
+                {
+                    return BadRequest(new { success = false, message = "表名不能为空" });
+                }
+
                 if (pageNumber < 1) pageNumber = 1;
                 if (pageSize < 1 || pageSize > 100) pageSize = 20;
 
-                var (data, totalCount) = await _service.GetDataByTableNamePagedAsync(tableName, pageNumber, pageSize);
+                var (data, totalCount) = await _service.GetDataByTableNamePagedAsync(tableName, orderby, where, pageNumber, pageSize);
 
                 return Ok(new
                 {
@@ -178,6 +193,19 @@ namespace IoTMonitor.Controllers
                     totalCount = totalCount,
                     totalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
                 });
+                //return Ok(new
+                //{
+                //    success = true,
+                //    data = data,
+                //    tableName = tableName,
+                //    deviceName = device.DeviceName,
+                //    pageNumber = pageNumber,
+                //    pageSize = pageSize,
+                //    totalCount = totalCount,
+                //    totalPages = (int)Math.Ceiling(totalCount / (double)pageSize),
+                //    startTime = startTime,
+                //    endTime = endTime
+                //});
             }
             catch (ArgumentException ex)
             {
@@ -193,7 +221,6 @@ namespace IoTMonitor.Controllers
                 });
             }
         }
-
         /// <summary>
         /// 获取数据库中所有表名
         /// </summary>
