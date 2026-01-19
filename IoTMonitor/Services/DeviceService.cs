@@ -257,12 +257,12 @@ namespace IoTMonitor.Services
                 existingDevice.IsVisible = device.IsVisible;//是否显示
                 existingDevice.CreatedTime = device.CreatedTime;//创建时间
                 existingDevice.Remarks = device.Remarks;//说明
-                existingDevice.MinValue = device.MinValue;//最小阈值
-                existingDevice.MaxValue = device.MaxValue;//最大阈值
-                existingDevice.IsThreshold = device.IsThreshold;//是否阈值
-                existingDevice.DataUnit = device.DataUnit;//数据单位
+                existingDevice.ConfigMinValue = device.ConfigMinValue;//最小阈值
+                existingDevice.ConfigMaxValue = device.ConfigMaxValue;//最大阈值
+                existingDevice.IsAlarm = device.IsAlarm;//是否阈值
+                existingDevice.ConfigType = device.ConfigType;// 阈值比较类型 
 
- 
+
 
                 // 更新时间
                 existingDevice.CreatedTime = DateTime.Now;

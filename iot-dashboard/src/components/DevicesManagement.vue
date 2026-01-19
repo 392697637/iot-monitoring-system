@@ -87,8 +87,8 @@
             <el-table-column prop="sortOrder" label="排序" width="80" align="center" />
             <el-table-column label="预警值范围" width="150">
               <template #default="{ row }">
-                <div v-if="row.minValue || row.maxValue">
-                  {{ row.minValue || '' }} ~ {{ row.maxValue || '' }}
+                <div v-if="row.configMinValue || row.configMaxValue">
+                  {{ row.configMinValue || '' }} ~ {{ row.configMaxValue || '' }}
                 </div>
                 <div v-else style="color: #ccc">未设置</div>
               </template>
@@ -103,10 +103,10 @@
                 />
               </template>
             </el-table-column>
-            <el-table-column prop="isThreshold" label="是否预警" width="100" align="center">
+            <el-table-column prop="isAlarm" label="是否预警" width="100" align="center">
               <template #default="{ row }">
                 <el-switch
-                  v-model="row.isThreshold"
+                  v-model="row.isAlarm"
                   :active-value="true"
                   :inactive-value="false"
                   @change="updateFactorThreshold(row)"
@@ -271,8 +271,8 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="数据单位" prop="dataUnit">
-              <el-input v-model="factorForm.dataUnit" placeholder="数据单位" />
+            <el-form-item label=" 阈值比较类型 " prop="configType">
+              <el-input v-model="factorForm.configType" placeholder=" 阈值比较类型 " />
             </el-form-item>
           </el-col>
         </el-row>
@@ -323,11 +323,11 @@
             <el-form-item label="预警值设置">
               <el-row :gutter="10">
                 <el-col :span="11">
-                  <el-input v-model="factorForm.minValue" placeholder="最小值" />
+                  <el-input v-model="factorForm.configMinValue" placeholder="最小值" />
                 </el-col>
                 <el-col :span="2" style="text-align: center">~</el-col>
                 <el-col :span="11">
-                  <el-input v-model="factorForm.maxValue" placeholder="最大值" />
+                  <el-input v-model="factorForm.configMaxValue" placeholder="最大值" />
                 </el-col>
               </el-row>
               <span style="font-size: 12px; color: #999">留空表示不设置预警</span>
@@ -340,7 +340,7 @@
           </el-col>
           <el-col :span="6">
             <el-form-item label="是否预警">
-              <el-switch v-model="factorForm.isThreshold" :active-value="true" :inactive-value="false" />
+              <el-switch v-model="factorForm.isAlarm" :active-value="true" :inactive-value="false" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -410,12 +410,12 @@ const factorForm = reactive({
   DecimalPlaces: 2,
   displayName: "",
   displayUnit: "",
-  dataUnit: "",
+  configType: "",
   sortOrder: 0,
   isVisible: true,
-  isThreshold: false,
-  minValue: "",
-  maxValue: "",
+  isAlarm: false,
+  configMinValue: "",
+  configMaxValue: "",
   remarks: "",
 });
 const isEditFactorMode = ref(false);
@@ -496,12 +496,12 @@ const selectDevice = async (device) => {
       activeDeviceFactors.value = res.map(factor => ({
         ...factor,
         isVisible: factor.isVisible === true || factor.isVisible === 1 || factor.isVisible === 'true',
-        isThreshold: factor.isThreshold === true || factor.isThreshold === 1 || factor.isThreshold === 'true',
+        isAlarm: factor.isAlarm === true || factor.isAlarm === 1 || factor.isAlarm === 'true',
         sortOrder: factor.sortOrder || 0,
         FieldLength: factor.FieldLength || null,
         DecimalPlaces: factor.DecimalPlaces || null,
-        minValue: factor.minValue || '',
-        maxValue: factor.maxValue || '',
+        configMinValue: factor.configMinValue || '',
+        configMaxValue: factor.configMaxValue || '',
       }));
     }
     currentFactorPage.value = 1;
@@ -671,12 +671,12 @@ const resetFactorForm = () => {
     DecimalPlaces: 2,
     displayName: "",
     displayUnit: "",
-    dataUnit: "",
+    configType: "",
     sortOrder: 0,
     isVisible: true,
-    isThreshold: false,
-    minValue: "",
-    maxValue: "",
+    isAlarm: false,
+    configMinValue: "",
+    configMaxValue: "",
     remarks: "",
   });
   editingFactorId.value = null;
@@ -697,12 +697,12 @@ const submitFactorForm = async () => {
       fieldType: factorForm.fieldType,
       displayName: factorForm.displayName,
       displayUnit: factorForm.displayUnit || '',
-      dataUnit: factorForm.dataUnit || '',
+      configType: factorForm.configType || '',
       sortOrder: factorForm.sortOrder || 0,
       isVisible: Boolean(factorForm.isVisible),
-      isThreshold: Boolean(factorForm.isThreshold),
-      minValue: factorForm.minValue || '',
-      maxValue: factorForm.maxValue || '',
+      isAlarm: Boolean(factorForm.isAlarm),
+      configMinValue: factorForm.configMinValue || '',
+      configMaxValue: factorForm.configMaxValue || '',
       remarks: factorForm.remarks || '',
     };
 
@@ -799,7 +799,7 @@ const updateFactorThreshold = async (factor) => {
     const updateData = {
       ...factor,
       tableName: activeDevice.value.deviceTable,
-      isThreshold: factor.isThreshold,
+      isAlarm: factor.isAlarm,
     };
 
     await updateFactor(updateData);
@@ -808,7 +808,7 @@ const updateFactorThreshold = async (factor) => {
     console.error("更新预警状态失败:", error);
     ElMessage.error("更新预警状态失败");
     // 恢复原来的状态
-    factor.isThreshold = !factor.isThreshold;
+    factor.isAlarm = !factor.isAlarm;
   }
 };
 

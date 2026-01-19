@@ -15,7 +15,7 @@ namespace IoTMonitor.Models
         public DateTime CreatedAt { get; set; }
         public string? DeviceTable { get; set; }
         public string? DeviceTableID { get; set; }
-        
+
     }
     /// <summary>
     /// 设备表配置实体
@@ -100,29 +100,30 @@ namespace IoTMonitor.Models
         /// 存储为字符串以适应不同类型的阈值（数值、文本匹配等）
         /// </summary>
         [StringLength(100, ErrorMessage = "最小阈值长度不能超过100个字符")]
-        [Column("MinValue")]
-        public string? MinValue { get; set; }
+        [Column("ConfigMinValue")]
+        public string? ConfigMinValue { get; set; }
 
         /// <summary>
         /// 最大阈值
         /// 存储为字符串以适应不同类型的阈值（数值、文本匹配等）
         /// </summary>
         [StringLength(100, ErrorMessage = "最大阈值长度不能超过100个字符")]
-        [Column("MaxValue")]
-        public string? MaxValue { get; set; }
+        [Column("ConfigMaxValue")]
+        public string? ConfigMaxValue { get; set; }
 
         /// <summary>
         /// 是否阈值字段（true=需要阈值监测，false=不需要）
         /// </summary>
-        [Column("IsThreshold")]
-        public bool IsThreshold { get; set; } = false;
+        [Column("IsAlarm")]
+        public bool IsAlarm { get; set; } = false;
 
         /// <summary>
-        /// 数据单位（实际存储的单位，与DisplayUnit可能不同）
+        ///  阈值比较类型 
         /// </summary>
         [StringLength(50, ErrorMessage = "数据单位长度不能超过50个字符")]
-        [Column("DataUnit")]
-        public string? DataUnit { get; set; }
+        [Column("ConfigType")]
+        public string? ConfigType { get; set; }
+
 
     }
 }
