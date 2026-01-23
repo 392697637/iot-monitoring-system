@@ -19,6 +19,7 @@ builder.Services.AddDbContext<IoTDbContext>(options =>
 builder.Services.AddScoped<DeviceService>();
 
 builder.Services.AddScoped<DeviceTableService>();
+builder.Services.AddScoped<IAlarmService, AlarmService>();
 
 // -------------------
 // 控制器 & Swagger

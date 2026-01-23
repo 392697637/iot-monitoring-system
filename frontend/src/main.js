@@ -27,7 +27,7 @@ import {
 import VueMeta from 'vue-meta'
 import VueI18n from 'vue-i18n'
 import './assets/styles/global.css'
-import './assets/styles/element-variables.scss'
+// import './assets/styles/element-variables.scss'
 
 // 配置ECharts
 use([

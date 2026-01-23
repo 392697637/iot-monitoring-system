@@ -125,16 +125,16 @@ module.exports = defineConfig({
     }
   },
 
-  // 配置CSS
-  css: {
-    extract: process.env.NODE_ENV === "production",
-    sourceMap: false,
-    loaderOptions: {
-      sass: {
-        additionalData: `@import "@/assets/styles/variables.scss";`,
-      },
-    },
-  },
+  // // 配置CSS
+  // css: {
+  //   extract: process.env.NODE_ENV === "production",
+  //   sourceMap: false,
+  //   loaderOptions: {
+  //     sass: {
+  //       additionalData: `@import "@/assets/styles/variables.scss";`,
+  //     },
+  //   },
+  // },
 
   // PWA配置
   pwa: {

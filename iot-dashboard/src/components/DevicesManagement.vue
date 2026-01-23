@@ -18,13 +18,13 @@
             </el-button>
           </div>
         </div>
-        
+
         <div class="device-list">
-          <div 
-            v-for="device in devices" 
+          <div
+            v-for="device in devices"
             :key="device.deviceId"
             class="device-item"
-            :class="{ 'active': activeDeviceId === device.deviceId }"
+            :class="{ active: activeDeviceId === device.deviceId }"
             @click="selectDevice(device)"
           >
             <div class="device-info">
@@ -33,17 +33,17 @@
               <div class="device-table">表名: {{ device.deviceTable }}</div>
             </div>
             <div class="device-actions">
-              <el-button 
-                type="primary" 
-                size="small" 
+              <el-button
+                type="primary"
+                size="small"
                 @click.stop="openEditDeviceDialog(device)"
                 title="编辑设备"
               >
                 <el-icon><Edit /></el-icon>
               </el-button>
-              <el-button 
-                type="danger" 
-                size="small" 
+              <el-button
+                type="danger"
+                size="small"
                 @click.stop="deleteDeviceAction(device)"
                 title="删除设备"
               >
@@ -59,7 +59,11 @@
         <div class="factor-management-header" v-if="activeDevice">
           <h3>{{ activeDevice.deviceName }} - 因子管理</h3>
           <div class="factor-actions">
-            <el-button type="primary" @click="openAddFactorDialog" :disabled="!activeDevice">
+            <el-button
+              type="primary"
+              @click="openAddFactorDialog"
+              :disabled="!activeDevice"
+            >
               <el-icon><Plus /></el-icon>
               添加因子
             </el-button>
@@ -68,32 +72,49 @@
 
         <!-- 因子表格 -->
         <div v-if="activeDevice" class="factor-table-container">
-          <el-table 
-            :data="pagedFactors" 
-            style="width: 100%" 
-            v-loading="factorLoading" 
-            stripe 
+          <el-table
+            :data="pagedFactors"
+            style="width: 100%"
+            v-loading="factorLoading"
+            stripe
             border
             height="calc(100vh - 280px)"
           >
             <el-table-column prop="fieldName" label="字段名" width="120" />
             <el-table-column prop="fieldType" label="数据类型" width="100">
               <template #default="{ row }">
-                {{ getDataTypeDisplay(row.fieldType, row.FieldLength, row.DecimalPlaces) }}
+                {{
+                  getDataTypeDisplay(
+                    row.fieldType,
+                    row.FieldLength,
+                    row.DecimalPlaces
+                  )
+                }}
               </template>
             </el-table-column>
             <el-table-column prop="displayName" label="显示名称" width="120" />
             <el-table-column prop="displayUnit" label="显示单位" width="100" />
-            <el-table-column prop="sortOrder" label="排序" width="80" align="center" />
+            <el-table-column
+              prop="sortOrder"
+              label="排序"
+              width="80"
+              align="center"
+            />
             <el-table-column label="预警值范围" width="150">
               <template #default="{ row }">
                 <div v-if="row.configMinValue || row.configMaxValue">
-                  {{ row.configMinValue || '' }} ~ {{ row.configMaxValue || '' }}
+                  {{ row.configMinValue || "" }} ~
+                  {{ row.configMaxValue || "" }}
                 </div>
                 <div v-else style="color: #ccc">未设置</div>
               </template>
             </el-table-column>
-            <el-table-column prop="isVisible" label="是否显示" width="100" align="center">
+            <el-table-column
+              prop="isVisible"
+              label="是否显示"
+              width="100"
+              align="center"
+            >
               <template #default="{ row }">
                 <el-switch
                   v-model="row.isVisible"
@@ -103,7 +124,12 @@
                 />
               </template>
             </el-table-column>
-            <el-table-column prop="isAlarm" label="是否预警" width="100" align="center">
+            <el-table-column
+              prop="isAlarm"
+              label="是否预警"
+              width="100"
+              align="center"
+            >
               <template #default="{ row }">
                 <el-switch
                   v-model="row.isAlarm"
@@ -124,7 +150,11 @@
                 <el-button type="warning" size="small" @click="editFactor(row)">
                   编辑
                 </el-button>
-                <el-button type="danger" size="small" @click="deleteFactor(row)">
+                <el-button
+                  type="danger"
+                  size="small"
+                  @click="deleteFactor(row)"
+                >
                   删除
                 </el-button>
               </template>
@@ -159,33 +189,37 @@
       width="500px"
       @closed="handleDeviceDialogClosed"
     >
-      <el-form 
+      <el-form
         ref="deviceFormRef"
-        :model="deviceForm" 
-        :rules="deviceRules" 
+        :model="deviceForm"
+        :rules="deviceRules"
         label-width="120px"
         status-icon
       >
         <el-form-item label="设备名称" prop="deviceName">
-          <el-input 
-            v-model="deviceForm.deviceName" 
-            placeholder="请输入设备名称" 
-            clearable
-          />
-        </el-form-item>
-        
-        <el-form-item label="设备类型" prop="deviceType">
-          <el-input 
-            v-model="deviceForm.deviceType" 
-            placeholder="请输入设备类型" 
+          <el-input
+            v-model="deviceForm.deviceName"
+            placeholder="请输入设备名称"
             clearable
           />
         </el-form-item>
 
+        <el-form-item label="设备类型" prop="deviceType">
+          <el-select
+            v-model="deviceForm.deviceType"
+            placeholder="请选择设备类型"
+            style="width: 100%"
+            @change="handleDeviceTypeChange"
+          >
+            <el-option label="Access" value="Access" />
+            <el-option label="OpcUA" value="OpcUA" />
+          </el-select>
+        </el-form-item>
+
         <el-form-item label="数据表名" prop="deviceTable">
-          <el-input 
-            v-model="deviceForm.deviceTable" 
-            placeholder="请输入数据表名（英文）" 
+          <el-input
+            v-model="deviceForm.deviceTable"
+            placeholder="请输入数据表名（英文）"
             clearable
             :disabled="isEditMode"
           />
@@ -195,18 +229,56 @@
         </el-form-item>
 
         <el-form-item label="设备表主键" prop="deviceTableID">
-          <el-input 
-            v-model="deviceForm.deviceTableID" 
-            placeholder="请输入设备表主键" 
+          <el-input
+            v-model="deviceForm.deviceTableID"
+            placeholder="请输入设备表主键"
             clearable
           />
         </el-form-item>
 
+        <!-- Access相关字段 -->
+        <template v-if="deviceForm.deviceType === 'Access'">
+          <el-form-item label="Access服务地址" prop="accessUrl">
+            <el-input
+              v-model="deviceForm.accessUrl"
+              placeholder="例如：https://api.example.com/access"
+              clearable
+            />
+          </el-form-item>
+        </template>
+
+        <!-- OpcUA相关字段 -->
+        <template v-if="deviceForm.deviceType === 'OpcUA'">
+          <el-form-item label="OpcUa服务地址" prop="opcUaUrl">
+            <el-input
+              v-model="deviceForm.opcUaUrl"
+              placeholder="例如：opc.tcp://192.168.1.100:4840"
+              clearable
+            />
+          </el-form-item>
+          <el-form-item label="OpcUa用户名" prop="opcUaUser">
+            <el-input
+              v-model="deviceForm.opcUaUser"
+              placeholder="请输入OpcUa用户名"
+              clearable
+            />
+          </el-form-item>
+          <el-form-item label="OpcUa密码" prop="opcUaPass">
+            <el-input
+              v-model="deviceForm.opcUaPass"
+              type="password"
+              placeholder="请输入OpcUa密码"
+              clearable
+              show-password
+            />
+          </el-form-item>
+        </template>
+
         <el-form-item label="说明" prop="description">
-          <el-input 
-            v-model="deviceForm.description" 
-            type="textarea" 
-            :rows="3" 
+          <el-input
+            v-model="deviceForm.description"
+            type="textarea"
+            :rows="3"
             placeholder="请输入设备说明"
             maxlength="500"
             show-word-limit
@@ -224,8 +296,12 @@
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="deviceDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="submitDeviceForm" :loading="submitting">
-            {{ isEditMode ? '保存' : '添加' }}
+          <el-button
+            type="primary"
+            @click="submitDeviceForm"
+            :loading="submitting"
+          >
+            {{ isEditMode ? "保存" : "添加" }}
           </el-button>
         </span>
       </template>
@@ -238,28 +314,34 @@
       width="700px"
       @closed="handleFactorDialogClosed"
     >
-      <el-form 
-        :model="factorForm" 
-        label-width="100px" 
+      <el-form
+        :model="factorForm"
+        label-width="100px"
         :rules="factorRules"
         ref="factorFormRef"
       >
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="字段名" prop="fieldName" required>
-              <el-input 
-                v-model="factorForm.fieldName" 
-                placeholder="字段名（英文）" 
+              <el-input
+                v-model="factorForm.fieldName"
+                placeholder="字段名（英文）"
                 :disabled="isEditFactorMode"
               />
-              <span v-if="isEditFactorMode" style="font-size: 12px; color: #999">
+              <span
+                v-if="isEditFactorMode"
+                style="font-size: 12px; color: #999"
+              >
                 字段名创建后不可修改
               </span>
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="显示名称" prop="displayName" required>
-              <el-input v-model="factorForm.displayName" placeholder="显示名称" />
+              <el-input
+                v-model="factorForm.displayName"
+                placeholder="显示名称"
+              />
             </el-form-item>
           </el-col>
         </el-row>
@@ -267,12 +349,18 @@
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="显示单位" prop="displayUnit">
-              <el-input v-model="factorForm.displayUnit" placeholder="显示单位" />
+              <el-input
+                v-model="factorForm.displayUnit"
+                placeholder="显示单位"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label=" 阈值比较类型 " prop="configType">
-              <el-input v-model="factorForm.configType" placeholder=" 阈值比较类型 " />
+              <el-input
+                v-model="factorForm.configType"
+                placeholder=" 阈值比较类型 "
+              />
             </el-form-item>
           </el-col>
         </el-row>
@@ -280,7 +368,11 @@
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="数据类型" prop="fieldType">
-              <el-select v-model="factorForm.fieldType" placeholder="请选择数据类型" style="width: 100%">
+              <el-select
+                v-model="factorForm.fieldType"
+                placeholder="请选择数据类型"
+                style="width: 100%"
+              >
                 <el-option label="整数(INT)" value="INT" />
                 <el-option label="浮点数(FLOAT)" value="FLOAT" />
                 <el-option label="双精度(DOUBLE)" value="DOUBLE" />
@@ -295,12 +387,22 @@
           </el-col>
           <el-col :span="6" v-if="showFieldLength">
             <el-form-item label="字段长度" prop="FieldLength">
-              <el-input-number v-model="factorForm.FieldLength" :min="1" :max="4000" style="width: 100%" />
+              <el-input-number
+                v-model="factorForm.FieldLength"
+                :min="1"
+                :max="4000"
+                style="width: 100%"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="6" v-if="showDecimalPlaces">
             <el-form-item label="小数位数" prop="DecimalPlaces">
-              <el-input-number v-model="factorForm.DecimalPlaces" :min="0" :max="10" style="width: 100%" />
+              <el-input-number
+                v-model="factorForm.DecimalPlaces"
+                :min="0"
+                :max="10"
+                style="width: 100%"
+              />
             </el-form-item>
           </el-col>
         </el-row>
@@ -308,7 +410,12 @@
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="排序" prop="sortOrder">
-              <el-input-number v-model="factorForm.sortOrder" :min="0" :max="999" style="width: 100%" />
+              <el-input-number
+                v-model="factorForm.sortOrder"
+                :min="0"
+                :max="999"
+                style="width: 100%"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -323,24 +430,40 @@
             <el-form-item label="预警值设置">
               <el-row :gutter="10">
                 <el-col :span="11">
-                  <el-input v-model="factorForm.configMinValue" placeholder="最小值" />
+                  <el-input
+                    v-model="factorForm.configMinValue"
+                    placeholder="最小值"
+                  />
                 </el-col>
                 <el-col :span="2" style="text-align: center">~</el-col>
                 <el-col :span="11">
-                  <el-input v-model="factorForm.configMaxValue" placeholder="最大值" />
+                  <el-input
+                    v-model="factorForm.configMaxValue"
+                    placeholder="最大值"
+                  />
                 </el-col>
               </el-row>
-              <span style="font-size: 12px; color: #999">留空表示不设置预警</span>
+              <span style="font-size: 12px; color: #999"
+                >留空表示不设置预警</span
+              >
             </el-form-item>
           </el-col>
           <el-col :span="6">
             <el-form-item label="是否显示">
-              <el-switch v-model="factorForm.isVisible" :active-value="true" :inactive-value="false" />
+              <el-switch
+                v-model="factorForm.isVisible"
+                :active-value="true"
+                :inactive-value="false"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="6">
             <el-form-item label="是否预警">
-              <el-switch v-model="factorForm.isAlarm" :active-value="true" :inactive-value="false" />
+              <el-switch
+                v-model="factorForm.isAlarm"
+                :active-value="true"
+                :inactive-value="false"
+              />
             </el-form-item>
           </el-col>
         </el-row>
@@ -349,8 +472,12 @@
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="factorDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="submitFactorForm" :loading="factorSubmitting">
-            {{ isEditFactorMode ? '保存' : '添加' }}
+          <el-button
+            type="primary"
+            @click="submitFactorForm"
+            :loading="factorSubmitting"
+          >
+            {{ isEditFactorMode ? "保存" : "添加" }}
           </el-button>
         </span>
       </template>
@@ -360,7 +487,7 @@
 
 <script setup>
 import { ref, reactive, onMounted, computed, watch } from "vue";
-import { Search, Plus, Refresh, Edit, Delete } from '@element-plus/icons-vue'
+import { Search, Plus, Refresh, Edit, Delete } from "@element-plus/icons-vue";
 import {
   getDevices,
   addDevice,
@@ -386,6 +513,10 @@ const deviceForm = reactive({
   deviceType: "",
   deviceTable: "",
   deviceTableID: "",
+  accessUrl: "", // Access服务地址
+  opcUaUrl: "",
+  opcUaUser: "",
+  opcUaPass: "",
   description: "",
   autoCreateTable: false, // 默认为不创建表
 });
@@ -422,86 +553,233 @@ const isEditFactorMode = ref(false);
 const factorSubmitting = ref(false);
 const editingFactorId = ref(null);
 
-// 验证规则
-const deviceRules = {
-  deviceName: [
-    { required: true, message: '设备名称不能为空', trigger: 'blur' },
-    { min: 2, max: 50, message: '长度在 2 到 50 个字符', trigger: 'blur' }
-  ],
-  deviceTable: [
-    { required: true, message: '数据表名不能为空', trigger: 'blur' },
-    { pattern: /^[a-zA-Z_][a-zA-Z0-9_]*$/, message: '只能包含字母、数字和下划线，且以字母或下划线开头', trigger: 'blur' }
-  ],
-  deviceTableID: [
-    { pattern: /^[a-zA-Z0-9_]*$/, message: '只能包含字母、数字和下划线', trigger: 'blur' }
-  ]
+// 验证规则 - 动态验证规则函数
+const getDeviceRules = (deviceType) => {
+  const rules = {
+    deviceName: [
+      { required: true, message: "设备名称不能为空", trigger: "blur" },
+      { min: 2, max: 50, message: "长度在 2 到 50 个字符", trigger: "blur" },
+    ],
+    deviceType: [
+      { required: true, message: "设备类型不能为空", trigger: "change" },
+    ],
+    deviceTable: [
+      { required: true, message: "数据表名不能为空", trigger: "blur" },
+      {
+        pattern: /^[a-zA-Z_][a-zA-Z0-9_]*$/,
+        message: "只能包含字母、数字和下划线，且以字母或下划线开头",
+        trigger: "blur",
+      },
+    ],
+    deviceTableID: [
+      {
+        pattern: /^[a-zA-Z0-9_]*$/,
+        message: "只能包含字母、数字和下划线",
+        trigger: "blur",
+      },
+    ],
+  };
+
+  // 如果设备类型是 Access，添加相关验证规则
+  if (deviceType === "Access") {
+    rules.accessUrl = [
+      {
+        required: true,
+        message: "Access服务地址不能为空",
+        trigger: "blur",
+      },
+      {
+        validator: (rule, value, callback) => {
+          if (value) {
+            // Access地址验证（HTTP/HTTPS）
+            if (!value.startsWith("http://") && !value.startsWith("https://")) {
+              callback(new Error("Access地址应以 http:// 或 https:// 开头"));
+            } else {
+              // 验证URL格式
+              try {
+                new URL(value);
+                callback();
+              } catch (error) {
+                callback(new Error("请输入有效的URL地址"));
+              }
+            }
+          } else {
+            callback();
+          }
+        },
+        trigger: "blur",
+      },
+    ];
+  }
+
+  // 如果设备类型是 OpcUA，添加相关验证规则
+  if (deviceType === "OpcUA") {
+    rules.opcUaUrl = [
+      {
+        required: true,
+        message: "OpcUa服务地址不能为空",
+        trigger: "blur",
+      },
+      {
+        validator: (rule, value, callback) => {
+          if (value) {
+            // OpcUa地址验证
+            if (!value.startsWith("opc.tcp://")) {
+              callback(new Error("OpcUa地址应以 opc.tcp:// 开头"));
+            } else {
+              // 验证IP和端口格式
+              const urlRegex =
+                /^opc\.tcp:\/\/(([0-9]{1,3}\.){3}[0-9]{1,3}|localhost)(:[0-9]{1,5})?(\/.*)?$/;
+              if (!urlRegex.test(value)) {
+                callback(
+                  new Error(
+                    "请输入有效的OpcUa地址，例如：opc.tcp://192.168.1.100:4840"
+                  )
+                );
+              } else {
+                callback();
+              }
+            }
+          } else {
+            callback();
+          }
+        },
+        trigger: "blur",
+      },
+    ];
+
+    rules.opcUaUser = [
+      {
+        required: true,
+        message: "OpcUa用户名不能为空",
+        trigger: "blur",
+      },
+      {
+        min: 1,
+        max: 50,
+        message: "用户名长度在 1 到 50 个字符",
+        trigger: "blur",
+      },
+    ];
+
+    rules.opcUaPass = [
+      {
+        required: true,
+        message: "OpcUa密码不能为空",
+        trigger: "blur",
+      },
+      {
+        min: 1,
+        max: 100,
+        message: "密码长度在 1 到 100 个字符",
+        trigger: "blur",
+      },
+    ];
+  }
+
+  return rules;
 };
+
+// 设备验证规则（响应式）
+const deviceRules = ref(getDeviceRules(""));
 
 const factorRules = {
   fieldName: [
-    { required: true, message: '字段名不能为空', trigger: 'blur' },
-    { pattern: /^[a-zA-Z_][a-zA-Z0-9_]*$/, message: '只能包含字母、数字和下划线，且以字母或下划线开头', trigger: 'blur' }
+    { required: true, message: "字段名不能为空", trigger: "blur" },
+    {
+      pattern: /^[a-zA-Z_][a-zA-Z0-9_]*$/,
+      message: "只能包含字母、数字和下划线，且以字母或下划线开头",
+      trigger: "blur",
+    },
   ],
   displayName: [
-    { required: true, message: '显示名称不能为空', trigger: 'blur' }
+    { required: true, message: "显示名称不能为空", trigger: "blur" },
   ],
   fieldType: [
-    { required: true, message: '数据类型不能为空', trigger: 'change' }
-  ]
+    { required: true, message: "数据类型不能为空", trigger: "change" },
+  ],
 };
 
 // 计算属性
 const pagedFactors = computed(() => {
   if (!activeDeviceFactors.value) return [];
-  
+
   const start = (currentFactorPage.value - 1) * factorPageSize.value;
   const end = start + factorPageSize.value;
   return activeDeviceFactors.value.slice(start, end);
 });
 
 const deviceDialogTitle = computed(() => {
-  return isEditMode.value ? '编辑设备' : '添加设备';
+  return isEditMode.value ? "编辑设备" : "添加设备";
 });
 
 const factorDialogTitle = computed(() => {
-  if (!activeDevice.value) return '';
-  return isEditFactorMode.value 
-    ? `编辑因子 - ${activeDevice.value.deviceName}` 
+  if (!activeDevice.value) return "";
+  return isEditFactorMode.value
+    ? `编辑因子 - ${activeDevice.value.deviceName}`
     : `添加因子 - ${activeDevice.value.deviceName}`;
 });
 
 // 显示字段长度的数据类型
 const showFieldLength = computed(() => {
-  return ['VARCHAR', 'CHAR', 'DECIMAL'].includes(factorForm.fieldType);
+  return ["VARCHAR", "CHAR", "DECIMAL"].includes(factorForm.fieldType);
 });
 
 // 显示小数位数的数据类型
 const showDecimalPlaces = computed(() => {
-  return ['FLOAT', 'DOUBLE', 'DECIMAL'].includes(factorForm.fieldType);
+  return ["FLOAT", "DOUBLE", "DECIMAL"].includes(factorForm.fieldType);
 });
+
+// 监听设备类型变化，更新验证规则
+watch(
+  () => deviceForm.deviceType,
+  (newVal) => {
+    // 根据设备类型动态更新验证规则
+    deviceRules.value = getDeviceRules(newVal);
+  },
+  { immediate: true }
+);
+
+// 设备类型变化处理
+const handleDeviceTypeChange = (value) => {
+  // 清除相关字段的值
+  if (value === "Access") {
+    deviceForm.opcUaUrl = "";
+    deviceForm.opcUaUser = "";
+    deviceForm.opcUaPass = "";
+  } else if (value === "OpcUA") {
+    deviceForm.accessUrl = "";
+  }
+};
 
 // 选择设备
 const selectDevice = async (device) => {
   activeDeviceId.value = device.deviceId;
   activeDevice.value = device;
-  
+
   try {
     factorLoading.value = true;
     const res = await getDeviceTable(device.deviceTable);
-    
+
     if (!res || !Array.isArray(res)) {
       activeDeviceFactors.value = [];
     } else {
       // 处理布尔值转换
-      activeDeviceFactors.value = res.map(factor => ({
+      activeDeviceFactors.value = res.map((factor) => ({
         ...factor,
-        isVisible: factor.isVisible === true || factor.isVisible === 1 || factor.isVisible === 'true',
-        isAlarm: factor.isAlarm === true || factor.isAlarm === 1 || factor.isAlarm === 'true',
+        isVisible:
+          factor.isVisible === true ||
+          factor.isVisible === 1 ||
+          factor.isVisible === "true",
+        isAlarm:
+          factor.isAlarm === true ||
+          factor.isAlarm === 1 ||
+          factor.isAlarm === "true",
         sortOrder: factor.sortOrder || 0,
         FieldLength: factor.FieldLength || null,
         DecimalPlaces: factor.DecimalPlaces || null,
-        configMinValue: factor.configMinValue || '',
-        configMaxValue: factor.configMaxValue || '',
+        configMinValue: factor.configMinValue || "",
+        configMaxValue: factor.configMaxValue || "",
       }));
     }
     currentFactorPage.value = 1;
@@ -529,8 +807,12 @@ const openEditDeviceDialog = (device) => {
     deviceType: device.deviceType,
     deviceTable: device.deviceTable,
     deviceTableID: device.deviceTableID,
-    description: device.description || '',
-    autoCreateTable: false
+    accessUrl: device.accessUrl || "",
+    opcUaUrl: device.opcUaUrl || "",
+    opcUaUser: device.opcUaUser || "",
+    opcUaPass: device.opcUaPass || "",
+    description: device.description || "",
+    autoCreateTable: false,
   });
   currentDeviceId.value = device.deviceId;
   isEditMode.value = true;
@@ -545,8 +827,12 @@ const resetDeviceForm = () => {
     deviceType: "",
     deviceTable: "",
     deviceTableID: "",
+    accessUrl: "",
+    opcUaUrl: "",
+    opcUaUser: "",
+    opcUaPass: "",
     description: "",
-    autoCreateTable: false
+    autoCreateTable: false,
   });
   currentDeviceId.value = null;
 };
@@ -554,28 +840,46 @@ const resetDeviceForm = () => {
 // 提交设备表单
 const submitDeviceForm = async () => {
   if (!deviceFormRef.value) return;
-  
+
   try {
     await deviceFormRef.value.validate();
     submitting.value = true;
-    
+
     if (isEditMode.value) {
       // 编辑设备
       const updateData = {
         ...deviceForm,
-        deviceId: currentDeviceId.value
+        deviceId: currentDeviceId.value,
       };
+      // 根据设备类型清理不相关的字段
+      if (updateData.deviceType === "Access") {
+        delete updateData.opcUaUrl;
+        delete updateData.opcUaUser;
+        delete updateData.opcUaPass;
+      } else if (updateData.deviceType === "OpcUA") {
+        delete updateData.accessUrl;
+      }
+      
       await updateDevice(updateData);
-      ElMessage.success('设备更新成功');
+      ElMessage.success("设备更新成功");
     } else {
       // 添加设备
       const addData = {
-        ...deviceForm
+        ...deviceForm,
       };
+      // 根据设备类型清理不相关的字段
+      if (addData.deviceType === "Access") {
+        delete addData.opcUaUrl;
+        delete addData.opcUaUser;
+        delete addData.opcUaPass;
+      } else if (addData.deviceType === "OpcUA") {
+        delete addData.accessUrl;
+      }
+      
       await addDevice(addData);
-      ElMessage.success('设备添加成功');
+      ElMessage.success("设备添加成功");
     }
-    
+
     deviceDialogVisible.value = false;
     fetchDevices();
   } catch (error) {
@@ -583,7 +887,7 @@ const submitDeviceForm = async () => {
       return;
     }
     console.error("操作失败:", error);
-    ElMessage.error(isEditMode.value ? '更新设备失败' : '添加设备失败');
+    ElMessage.error(isEditMode.value ? "更新设备失败" : "添加设备失败");
   } finally {
     submitting.value = false;
   }
@@ -600,7 +904,7 @@ const fetchDevices = async () => {
     loading.value = true;
     const res = await getDevices();
     devices.value = res || [];
-    
+
     // 如果有设备但未选中，默认选中第一个
     if (devices.value.length > 0 && !activeDeviceId.value) {
       selectDevice(devices.value[0]);
@@ -625,17 +929,17 @@ const deleteDeviceAction = async (device) => {
         type: "warning",
       }
     );
-    
+
     await deleteDevice(device.deviceId);
     ElMessage.success("设备删除成功");
-    
+
     // 如果删除的是当前选中的设备，清空右侧
     if (activeDeviceId.value === device.deviceId) {
       activeDeviceId.value = null;
       activeDevice.value = null;
       activeDeviceFactors.value = [];
     }
-    
+
     fetchDevices();
   } catch (error) {
     if (error !== "cancel") {
@@ -685,25 +989,25 @@ const resetFactorForm = () => {
 // 提交因子表单
 const submitFactorForm = async () => {
   if (!factorFormRef.value) return;
-  
+
   try {
     await factorFormRef.value.validate();
     factorSubmitting.value = true;
-    
+
     const factorData = {
-      id:factorForm.id,
+      id: factorForm.id,
       tableName: activeDevice.value.deviceTable,
       fieldName: factorForm.fieldName,
       fieldType: factorForm.fieldType,
       displayName: factorForm.displayName,
-      displayUnit: factorForm.displayUnit || '',
-      configType: factorForm.configType || '',
+      displayUnit: factorForm.displayUnit || "",
+      configType: factorForm.configType || "",
       sortOrder: factorForm.sortOrder || 0,
       isVisible: Boolean(factorForm.isVisible),
       isAlarm: Boolean(factorForm.isAlarm),
-      configMinValue: factorForm.configMinValue || '',
-      configMaxValue: factorForm.configMaxValue || '',
-      remarks: factorForm.remarks || '',
+      configMinValue: factorForm.configMinValue || "",
+      configMaxValue: factorForm.configMaxValue || "",
+      remarks: factorForm.remarks || "",
     };
 
     // 根据数据类型添加额外字段
@@ -720,22 +1024,22 @@ const submitFactorForm = async () => {
       ElMessage.success("因子更新成功");
     } else {
       // 添加因子
-        const addData = {
-        ...factorData
+      const addData = {
+        ...factorData,
       };
       await addFactor(addData);
       ElMessage.success("因子添加成功");
     }
-    
+
     factorDialogVisible.value = false;
-    
+
     // 刷新当前设备的因子列表
     if (activeDevice.value) {
       await selectDevice(activeDevice.value);
     }
   } catch (error) {
     console.error("操作失败:", error);
-    ElMessage.error(isEditFactorMode.value ? '更新因子失败' : '添加因子失败');
+    ElMessage.error(isEditFactorMode.value ? "更新因子失败" : "添加因子失败");
   } finally {
     factorSubmitting.value = false;
   }
@@ -844,12 +1148,12 @@ const formatTime = (timeString) => {
 
 // 获取数据类型的显示文本
 const getDataTypeDisplay = (fieldType, fieldLength, decimalPlaces) => {
-  if (!fieldType) return '';
-  
+  if (!fieldType) return "";
+
   switch (fieldType) {
-    case 'VARCHAR':
+    case "VARCHAR":
       return fieldLength ? `${fieldType}(${fieldLength})` : fieldType;
-    case 'DECIMAL':
+    case "DECIMAL":
       if (fieldLength && decimalPlaces !== undefined) {
         return `${fieldType}(${fieldLength},${decimalPlaces})`;
       }
@@ -860,25 +1164,28 @@ const getDataTypeDisplay = (fieldType, fieldLength, decimalPlaces) => {
 };
 
 // 监听数据类型变化
-watch(() => factorForm.fieldType, (newVal) => {
-  // 根据数据类型设置默认值
-  switch (newVal) {
-    case 'INT':
-      factorForm.FieldLength = 11;
-      break;
-    case 'VARCHAR':
-      factorForm.FieldLength = 255;
-      break;
-    case 'DECIMAL':
-      factorForm.FieldLength = 10;
-      factorForm.DecimalPlaces = 2;
-      break;
-    case 'FLOAT':
-    case 'DOUBLE':
-      factorForm.DecimalPlaces = 2;
-      break;
+watch(
+  () => factorForm.fieldType,
+  (newVal) => {
+    // 根据数据类型设置默认值
+    switch (newVal) {
+      case "INT":
+        factorForm.FieldLength = 11;
+        break;
+      case "VARCHAR":
+        factorForm.FieldLength = 255;
+        break;
+      case "DECIMAL":
+        factorForm.FieldLength = 10;
+        factorForm.DecimalPlaces = 2;
+        break;
+      case "FLOAT":
+      case "DOUBLE":
+        factorForm.DecimalPlaces = 2;
+        break;
+    }
   }
-});
+);
 
 // 初始化
 onMounted(() => {
@@ -890,7 +1197,6 @@ onMounted(() => {
 .device-management-container {
   display: flex;
   gap: 20px;
-  
 }
 
 .device-list-section {

@@ -447,9 +447,7 @@ const getConfigTypeText = (type) => {
 
 // 获取阈值显示文本
 const getThresholdDisplay = (config) => {
-  debugger
   if (!config) return '无';
-  
   if (config.type === 'range' && config.min !== undefined && config.max !== undefined) {
     return `${config.min} ~ ${config.max}`;
   } else if (config.type === 'high' && config.threshold !== undefined) {
@@ -630,7 +628,6 @@ const loadDeviceTable = async () => {
     if (!res || !Array.isArray(res)) return;
     
     const initialMetrics = res.map((m) => {
-      debugger
       // 使用新的字段名
       const config = parseAlarmConfig(m.configType, m.configMinValue, m.configMaxValue);
       const isAlarm = m.isAlarm === true || m.isAlarm === 1 || m.isAlarm === 'true' || m.isAlarm === '1';

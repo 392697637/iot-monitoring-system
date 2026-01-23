@@ -83,7 +83,7 @@
         <el-table-column type="selection" width="55" fixed="left" />
 
         <!-- 数据时间列（移除 fixed="left"） -->
-        <el-table-column
+        <!-- <el-table-column
           prop="DataTime"
           label="数据时间"
           width="180"
@@ -92,7 +92,7 @@
           <template #default="{ row }">
             {{ formatTime(row.DataTime) }}
           </template>
-        </el-table-column>
+        </el-table-column> -->
 
         <!-- 设备信息列 -->
         <el-table-column
@@ -396,7 +396,7 @@ const loadDeviceTable = async (tableName) => {
         minValue: col.minValue,
         maxValue: col.maxValue,
       }));
-
+debugger
     // 初始化导出列选择，添加设备名称
     exportForm.value.columns = ['DataTime', 'deviceName', ...tableColumns.value.map(col => col.fieldName)];
     
@@ -449,6 +449,7 @@ const search = async () => {
 
     const timeField = "DataTime";
 
+    debugger
     // 构建查询参数
     const params = {
       tableName: selectedDevice.value?.deviceTable,
@@ -725,27 +726,48 @@ const viewDetail = (row) => {
 };
 
 // 格式化时间（只显示到年月日）
+// 格式化时间（显示年月日时分秒）
 const formatTime = (timeString) => {
   if (!timeString) return "-";
   
   try {
-    // 提取年月日部分
-    const match = timeString.match(/^(\d{4}-\d{2}-\d{2})/);
-    if (match) {
-      return match[1];
+    // 首先尝试直接解析字符串
+    let date = new Date(timeString);
+    
+    // 如果解析失败，尝试处理常见的格式
+    if (isNaN(date.getTime())) {
+      // 移除可能的末尾空格和Z字符
+      const cleaned = timeString.trim().replace(/Z$/, '');
+      date = new Date(cleaned);
     }
     
-    // 尝试其他格式
-    const date = new Date(timeString);
-    if (!isNaN(date.getTime())) {
-      const year = date.getFullYear();
-      const month = (date.getMonth() + 1).toString().padStart(2, "0");
-      const day = date.getDate().toString().padStart(2, "0");
-      return `${year}-${month}-${day}`;
+    // 如果仍然失败，尝试其他格式
+    if (isNaN(date.getTime())) {
+      // 尝试匹配 ISO 8601 格式
+      const isoMatch = timeString.match(/^(\d{4}-\d{2}-\d{2}[T\s]\d{2}:\d{2}:\d{2})/);
+      if (isoMatch) {
+        date = new Date(isoMatch[1].replace(' ', 'T'));
+      }
     }
     
-    return timeString;
+    // 最终检查
+    if (isNaN(date.getTime())) {
+      console.warn(`无法解析时间字符串: ${timeString}`);
+      return timeString;
+    }
+    
+    // 格式化为年月日时分秒
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const day = date.getDate().toString().padStart(2, "0");
+    const hours = date.getHours().toString().padStart(2, "0");
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+    const seconds = date.getSeconds().toString().padStart(2, "0");
+    
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    
   } catch (e) {
+    console.error("时间格式化错误:", e);
     return timeString;
   }
 };

@@ -43,3 +43,24 @@ export function updateFactor(params) {
 export function deleteFactor(params) {
   return apiService.get(`/DeviceTable/deleteFactor`, { params: params });
 }
+
+
+// 获取报警历史列表（带分页和查询条件）
+export function getAlarmHistory(params) {
+  return apiService.get(`/Alarm/history`, { params: params });
+}
+
+// 获取报警统计信息
+export function getAlarmStats() {
+  return apiService.get(`/Alarm/stats`);
+}
+
+// 删除单条报警记录
+export function deleteAlarm(id) {
+  return apiService.delete(`/Alarm/${id}`);
+}
+
+// 批量删除报警记录
+export function batchDeleteAlarm(ids) {
+  return apiService.delete(`/Alarm/batch`, { data: ids });
+}
