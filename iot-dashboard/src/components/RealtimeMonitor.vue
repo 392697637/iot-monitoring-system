@@ -763,6 +763,7 @@ const manualRefresh = async () => {
 // 播放告警音
 const playAlarm = () => {
   try {
+    debugger
     if (!alarmAudio) {
       alarmAudio = new Audio("/data/alarm.mp3");
       // 预加载
