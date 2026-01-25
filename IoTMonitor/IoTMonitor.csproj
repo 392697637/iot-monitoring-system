@@ -17,6 +17,7 @@
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.0" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.0" />
 		<PackageReference Include="Microsoft.Office.Interop.Excel" Version="16.0.18925.20022" />
+		<PackageReference Include="OPCFoundation.NetStandard.Opc.Ua" Version="1.5.378.65" />
 
 		<!-- Swagger UI -->
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="7.2.0" />

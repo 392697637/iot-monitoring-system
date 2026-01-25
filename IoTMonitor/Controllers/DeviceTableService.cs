@@ -1,0 +1,170 @@
+﻿using IoTMonitor.Models;
+using IoTMonitor.Services;
+using Microsoft.AspNetCore.Mvc;
+
+namespace IoTMonitor.Controllers
+{
+    // Controllers/DeviceTableController.cs
+    [ApiController]
+    [Route("api/[controller]")]
+    public class DeviceTableController : ControllerBase
+    {
+        private readonly DeviceTableService _service;
+
+        public DeviceTableController(DeviceTableService service)
+        {
+            _service = service;
+        }
+
+        /// <summary>
+        /// 获取表字段
+        /// </summary>
+        /// <param name="tablename"></param>
+        /// <returns></returns>
+        [HttpGet("fieldByTableName")]
+        public async Task<IActionResult> GetfieldByTableName(string tablename)
+        {
+            try
+            {
+                var result = await _service.GetablenameByDataAsync(tablename);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                // 记录错误，方便调试s
+                Console.WriteLine(ex);
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// 根据表名查询表数据
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <returns>表数据</returns>
+        [HttpGet("dataByTableName")]
+        public async Task<IActionResult> GetDataByTableName(string tableName, string orderby, int topNumber)
+        {
+            try
+            {
+                var result = await _service.GetDataByTableNameAsync(tableName, orderby, topNumber);
+                return Ok(new
+                {
+                    success = true,
+                    data = result,
+                    tableName = tableName,
+                    count = result?.Count() ?? 0
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                // 记录日志
+                Console.WriteLine($"查询表 {tableName} 时出错: {ex.Message}");
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "服务器内部错误",
+                    detail = ex.Message
+                });
+            }
+        }
+
+        /// <summary>
+        /// 分页查询表数据
+        /// </summary>
+        /// <param name="deviceId">设备ID</param>
+        /// <param name="tableName">表名</param>
+        /// <param name="startTime">开始时间</param>
+        /// <param name="endTime">结束时间</param>
+        /// <param name="pageNumber">页码</param>
+        /// <param name="pageSize">每页大小</param>
+        /// <returns></returns>
+        [HttpGet("dataByHistory")]
+        public async Task<IActionResult> GetDataByHistoryPaged(
+            [FromQuery] string tableName,
+            [FromQuery] string orderby,
+            [FromQuery] string where,
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 20)
+        {
+            try
+            {
+                // 参数验证
+                if (string.IsNullOrEmpty(tableName))
+                {
+                    return BadRequest(new { success = false, message = "表名不能为空" });
+                }
+
+                if (pageNumber < 1) pageNumber = 1;
+                if (pageSize < 1 || pageSize > 100) pageSize = 20;
+
+                var (data, totalCount) = await _service.GetDataByTableNamePagedAsync(tableName, orderby, where, pageNumber, pageSize);
+                var datarest = new
+                {
+                    success = true,
+                    dataTable = data,
+                    tableName = tableName,
+                    pageNumber = pageNumber,
+                    pageSize = pageSize,
+                    totalCount = totalCount,
+                    totalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
+
+
+                };
+                return Ok(datarest);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"分页查询表 {tableName} 时出错: {ex.Message}");
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "服务器内部错误"
+                });
+            }
+        }
+
+
+
+        /// <summary>
+        /// 添加设备因子
+        /// </summary>
+        /// <param name="device"></param>
+        /// <returns></returns>
+        [HttpPost("addFactor")]
+        public async Task<IActionResult> AddFactor([FromBody] DeviceTable device)
+        {
+            return Ok(await _service.AddFactorAsync(device));
+        }
+        /// <summary>
+        /// 修改设备因子
+        /// </summary>
+        /// <param name="deviceId"></param>
+        /// <returns></returns>
+        [HttpPost("updateFactor")]
+        public async Task<IActionResult> UpdateFactor([FromBody] DeviceTable device)
+        {
+            return Ok(await _service.UpdateFactorAsync(device));
+        }
+
+        /// <summary>
+        /// 删除设备因子
+        /// </summary>
+        /// <param name="deviceId"></param>
+        /// <returns></returns>
+        [HttpGet("deleteFactor")]
+        public async Task<IActionResult> DeleteFactor(int id, string tableName)
+        {
+            return Ok(await _service.DeleteDeviceAsync(id));
+        }
+    }
+
+}

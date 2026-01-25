@@ -111,19 +111,15 @@ namespace IoTMonitor.Services
     {
         private readonly IConfiguration _configuration;
         private readonly IoTDbContext _context;
-
+        private readonly string _connectionString;
         public DeviceTableService(IoTDbContext context)
         {
             _context = context;
 
             _configuration = _context.GetService<IConfiguration>();
+            if (_configuration != null)
+                _connectionString = _configuration.GetConnectionString("DefaultConnection");
         }
-
-
-
-
-
-
 
         /// <summary>
         /// 获取表名
@@ -337,6 +333,71 @@ namespace IoTMonitor.Services
 
             var count = await connection.ExecuteScalarAsync<int>(sql, new { TableName = tableName });
             return count > 0;
+        }
+
+        /// <summary>
+        /// 插入数据到指定表
+        /// </summary>
+        public async Task<int> InsertDataAsync(string tableName, Dictionary<string, object> data)
+        {
+            if (data == null || data.Count == 0)
+                return 0;
+
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                await connection.OpenAsync();
+
+                // 构建动态SQL
+                var columns = string.Join(", ", data.Keys);
+                var parameters = string.Join(", ", data.Keys.Select(k => "@" + k));
+                var sql = $"INSERT INTO {tableName} ({columns}) VALUES ({parameters})";
+
+                return await connection.ExecuteAsync(sql, data);
+            }
+        }
+
+        /// <summary>
+        /// 获取表字段信息
+        /// </summary>
+        public async Task<Dictionary<string, Type>> GetTableFieldsAsync(string tableName)
+        {
+            var fields = new Dictionary<string, Type>();
+
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var query = $@"
+                    SELECT 
+                        COLUMN_NAME,
+                        DATA_TYPE,
+                        CHARACTER_MAXIMUM_LENGTH,
+                        NUMERIC_PRECISION,
+                        NUMERIC_SCALE
+                    FROM INFORMATION_SCHEMA.COLUMNS
+                    WHERE TABLE_NAME = @TableName
+                    ORDER BY ORDINAL_POSITION";
+
+                var columns = await connection.QueryAsync<dynamic>(query, new { TableName = tableName });
+
+                foreach (var column in columns)
+                {
+                    Type type = column.DATA_TYPE switch
+                    {
+                        "int" => typeof(int),
+                        "bigint" => typeof(long),
+                        "decimal" or "numeric" => typeof(decimal),
+                        "float" => typeof(double),
+                        "real" => typeof(float),
+                        "bit" => typeof(bool),
+                        "datetime" or "datetime2" => typeof(DateTime),
+                        "varchar" or "nvarchar" or "text" => typeof(string),
+                        _ => typeof(object)
+                    };
+
+                    fields[column.COLUMN_NAME] = type;
+                }
+            }
+
+            return fields;
         }
     }
 }
